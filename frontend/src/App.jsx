@@ -1,9 +1,9 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
+import Chat from './pages/Chat';
 import './App.css';
 
 function App() {
@@ -24,15 +24,15 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route
-        path="/dashboard"
+        path="/chat"
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <Chat />
           </ProtectedRoute>
         }
       />
-      {/* Redirect root to dashboard (will redirect to login if not authenticated) */}
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      {/* Redirect root and unknown routes to chat */}
+      <Route path="*" element={<Navigate to="/chat" replace />} />
     </Routes>
   );
 }

@@ -13,7 +13,7 @@ const Login = () => {
 
   // Redirect if already logged in
   if (user) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/chat" replace />;
   }
 
   const handleChange = (e) => {
