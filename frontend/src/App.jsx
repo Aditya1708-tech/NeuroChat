@@ -1,58 +1,40 @@
-import { useState, useEffect } from 'react'
-import './App.css'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import './App.css';
 
 function App() {
-  const [healthStatus, setHealthStatus] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const { loading } = useAuth();
 
-  useEffect(() => {
-    // Test frontend-backend communication
-    fetch('/api/health')
-      .then((res) => res.json())
-      .then((data) => {
-        setHealthStatus(data)
-        setLoading(false)
-      })
-      .catch((err) => {
-        setError(err.message)
-        setLoading(false)
-      })
-  }, [])
+  // Show loading screen while auth is being resolved
+  if (loading) {
+    return (
+      <div className="loading-screen">
+        <h1>🧠 NeuroChat</h1>
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="app">
-      <header className="app-header">
-        <h1>🧠 NeuroChat</h1>
-        <p className="tagline">Your Intelligent Conversation Partner</p>
-      </header>
-
-      <main className="app-main">
-        <div className="status-card">
-          <h2>System Status</h2>
-          {loading && <p className="status-loading">Connecting to backend...</p>}
-          {error && (
-            <div className="status-error">
-              <p>❌ Backend connection failed</p>
-              <p className="error-detail">{error}</p>
-              <p className="error-hint">Make sure the backend server is running on port 5000</p>
-            </div>
-          )}
-          {healthStatus && (
-            <div className="status-success">
-              <p>✅ Status: {healthStatus.status}</p>
-              <p>📡 {healthStatus.message}</p>
-              <p>🕐 {new Date(healthStatus.timestamp).toLocaleString()}</p>
-            </div>
-          )}
-        </div>
-      </main>
-
-      <footer className="app-footer">
-        <p>NeuroChat &copy; 2026 — BCA 5th Semester Field Project</p>
-      </footer>
-    </div>
-  )
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      {/* Redirect root to dashboard (will redirect to login if not authenticated) */}
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    </Routes>
+  );
 }
 
-export default App
+export default App;
