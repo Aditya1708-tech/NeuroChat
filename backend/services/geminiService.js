@@ -31,7 +31,7 @@ const generateResponse = async (history, newMessage) => {
 
   // Create a chat session with the conversation history
   const chat = client.chats.create({
-    model: 'gemini-2.0-flash',
+    model: 'gemini-3.6-flash',
     history: geminiHistory
   });
 
