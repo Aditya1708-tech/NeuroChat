@@ -1,21 +1,45 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 import api from '../services/api';
 
 const ChatContext = createContext(null);
 
 export const ChatProvider = ({ children }) => {
+  const { user } = useAuth();
+
   const [conversations, setConversations] = useState([]);
   const [activeConversation, setActiveConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [conversationsLoading, setConversationsLoading] = useState(false);
+  const [conversationsError, setConversationsError] = useState(null);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+
+  // Auto-clear all chat state when user logs out
+  useEffect(() => {
+    if (!user) {
+      setConversations([]);
+      setActiveConversation(null);
+      setMessages([]);
+      setLoading(false);
+      setConversationsLoading(false);
+      setConversationsError(null);
+      setMessagesLoading(false);
+    }
+  }, [user]);
 
   // Load all conversations for sidebar
   const loadConversations = useCallback(async () => {
+    setConversationsLoading(true);
+    setConversationsError(null);
     try {
       const res = await api.get('/conversations');
       setConversations(res.data.conversations);
     } catch (error) {
       console.error('Failed to load conversations:', error);
+      setConversationsError('Failed to load conversations');
+    } finally {
+      setConversationsLoading(false);
     }
   }, []);
 
@@ -36,18 +60,28 @@ export const ChatProvider = ({ children }) => {
 
   // Select a conversation and load its messages
   const selectConversation = useCallback(async (conversationId) => {
+    setMessagesLoading(true);
     try {
       const res = await api.get(`/conversations/${conversationId}`);
       setActiveConversation(res.data.conversation);
       setMessages(res.data.messages);
     } catch (error) {
       console.error('Failed to load conversation:', error);
+      // If conversation was deleted externally, remove from sidebar
+      if (error.response?.status === 404 || error.response?.status === 403) {
+        setConversations((prev) => prev.filter((c) => c._id !== conversationId));
+      }
+    } finally {
+      setMessagesLoading(false);
     }
   }, []);
 
   // Send a message and get AI response
-  const sendMessage = useCallback(async (messageText) => {
-    if (!activeConversation) return;
+  // Accepts optional targetConversationId to avoid race condition
+  // when creating a new conversation and immediately sending a message
+  const sendMessage = useCallback(async (messageText, targetConversationId) => {
+    const convId = targetConversationId || activeConversation?._id;
+    if (!convId) return;
 
     setLoading(true);
 
@@ -62,7 +96,7 @@ export const ChatProvider = ({ children }) => {
 
     try {
       const res = await api.post(
-        `/conversations/${activeConversation._id}/messages`,
+        `/conversations/${convId}/messages`,
         { message: messageText }
       );
 
@@ -76,15 +110,17 @@ export const ChatProvider = ({ children }) => {
       if (res.data.conversationTitle) {
         setConversations((prev) =>
           prev.map((c) =>
-            c._id === activeConversation._id
+            c._id === convId
               ? { ...c, title: res.data.conversationTitle, updatedAt: new Date().toISOString() }
               : c
           )
         );
-        setActiveConversation((prev) => ({
-          ...prev,
-          title: res.data.conversationTitle
-        }));
+        setActiveConversation((prev) => {
+          if (prev?._id === convId) {
+            return { ...prev, title: res.data.conversationTitle };
+          }
+          return prev;
+        });
       }
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -110,18 +146,28 @@ export const ChatProvider = ({ children }) => {
   const deleteConversation = useCallback(async (conversationId) => {
     try {
       await api.delete(`/conversations/${conversationId}`);
+
+      const isActive = activeConversation?._id === conversationId;
+
+      // Remove from sidebar
       setConversations((prev) => prev.filter((c) => c._id !== conversationId));
 
-      // If we deleted the active conversation, clear it
-      if (activeConversation?._id === conversationId) {
-        setActiveConversation(null);
-        setMessages([]);
+      // If we deleted the active conversation, auto-select the next one
+      if (isActive) {
+        const remaining = conversations.filter((c) => c._id !== conversationId);
+        if (remaining.length > 0) {
+          // Select the most recent remaining conversation
+          selectConversation(remaining[0]._id);
+        } else {
+          setActiveConversation(null);
+          setMessages([]);
+        }
       }
     } catch (error) {
       console.error('Failed to delete conversation:', error);
       throw error;
     }
-  }, [activeConversation]);
+  }, [activeConversation, conversations, selectConversation]);
 
   // Clear chat state (used on logout)
   const clearChat = useCallback(() => {
@@ -138,6 +184,9 @@ export const ChatProvider = ({ children }) => {
         activeConversation,
         messages,
         loading,
+        conversationsLoading,
+        conversationsError,
+        messagesLoading,
         loadConversations,
         createConversation,
         selectConversation,

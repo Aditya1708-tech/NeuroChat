@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import MessageBubble from './MessageBubble';
 
-const MessageList = ({ messages, loading }) => {
+const MessageList = ({ messages, loading, messagesLoading }) => {
   const bottomRef = useRef(null);
 
   // Auto-scroll to bottom when new messages arrive
@@ -11,7 +11,16 @@ const MessageList = ({ messages, loading }) => {
 
   return (
     <div className="message-list">
-      {messages.length === 0 && !loading ? (
+      {messagesLoading ? (
+        <div className="messages-loading">
+          <div className="messages-loading-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <p>Loading messages...</p>
+        </div>
+      ) : messages.length === 0 && !loading ? (
         <div className="empty-chat">
           <div className="empty-chat-icon">🧠</div>
           <h2>NeuroChat</h2>

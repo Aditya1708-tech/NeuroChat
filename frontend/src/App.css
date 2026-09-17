@@ -521,6 +521,197 @@
 }
 
 /* ===========================
+   Sidebar Search
+   =========================== */
+.sidebar-search {
+  padding: 0.5rem 0.75rem;
+  position: relative;
+  border-bottom: 1px solid var(--border);
+  transition: border-color var(--theme-transition);
+}
+
+.sidebar-search-input {
+  width: 100%;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  padding: 0.5rem 2rem 0.5rem 0.75rem;
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s ease,
+              box-shadow 0.2s ease,
+              background var(--theme-transition),
+              color var(--theme-transition);
+}
+
+.sidebar-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.sidebar-search-input:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px var(--input-focus-shadow);
+}
+
+.sidebar-search-clear {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0 0.2rem;
+  line-height: 1;
+  transition: color 0.15s ease;
+}
+
+.sidebar-search-clear:hover {
+  color: var(--text-primary);
+}
+
+/* ===========================
+   Sidebar Skeleton Loading
+   =========================== */
+.conversation-skeleton {
+  padding: 0.75rem 0.75rem;
+  margin-bottom: 2px;
+  border-radius: 10px;
+}
+
+.skeleton-line {
+  height: 12px;
+  background: var(--surface-hover);
+  border-radius: 6px;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+  margin-bottom: 6px;
+}
+
+.skeleton-line-short {
+  width: 60%;
+  margin-bottom: 0;
+}
+
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+/* ===========================
+   Sidebar Error State
+   =========================== */
+.sidebar-error {
+  text-align: center;
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sidebar-error p {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.sidebar-retry-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--accent-primary);
+  padding: 0.4rem 1rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sidebar-retry-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--accent-primary);
+}
+
+/* ===========================
+   Sidebar No Results
+   =========================== */
+.sidebar-no-results {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 2rem 1rem;
+  transition: color var(--theme-transition);
+}
+
+/* ===========================
+   Inline Delete Confirmation
+   =========================== */
+.delete-confirm {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.delete-confirm-text {
+  flex: 1;
+  font-size: 0.85rem;
+  color: var(--error-text);
+  font-weight: 500;
+}
+
+.delete-confirm-yes,
+.delete-confirm-no {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.delete-confirm-yes {
+  color: var(--error-text);
+  border-color: var(--error-border);
+}
+
+.delete-confirm-yes:hover {
+  background: var(--error-bg);
+  border-color: var(--error-text);
+}
+
+.delete-confirm-no {
+  color: var(--text-muted);
+}
+
+.delete-confirm-no:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+/* ===========================
+   Conversation Timestamp
+   =========================== */
+.conversation-time {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+  transition: color var(--theme-transition);
+}
+
+/* ===========================
    Message List
    =========================== */
 .message-list {
@@ -566,6 +757,48 @@
   color: var(--text-muted) !important;
   font-size: 0.8rem !important;
   margin-top: 0.5rem;
+}
+
+/* ===========================
+   Messages Loading State
+   =========================== */
+.messages-loading {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.messages-loading p {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  transition: color var(--theme-transition);
+}
+
+.messages-loading-dots {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.messages-loading-dots span {
+  width: 8px;
+  height: 8px;
+  background: var(--typing-dot);
+  border-radius: 50%;
+  animation: typing 1.4s ease-in-out infinite;
+  transition: background var(--theme-transition);
+}
+
+.messages-loading-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.messages-loading-dots span:nth-child(3) {
+  animation-delay: 0.4s;
 }
 
 /* ===========================
@@ -863,6 +1096,14 @@
   .auth-bg-orb-extra {
     width: 200px;
     height: 200px;
+  }
+
+  .sidebar-search-input {
+    font-size: 0.8rem;
+  }
+
+  .conversation-time {
+    display: none;
   }
 }
 

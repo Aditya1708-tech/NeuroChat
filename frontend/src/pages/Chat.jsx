@@ -10,6 +10,7 @@ const Chat = () => {
     activeConversation,
     messages,
     loading,
+    messagesLoading,
     loadConversations,
     createConversation,
     sendMessage
@@ -26,10 +27,14 @@ const Chat = () => {
   const handleSend = async (messageText) => {
     setError('');
 
-    // If no active conversation, create one first
-    if (!activeConversation) {
+    // If no active conversation, create one first and pass its ID directly
+    // to avoid the React state-update race condition
+    let targetConversationId = activeConversation?._id;
+
+    if (!targetConversationId) {
       try {
-        await createConversation();
+        const newConv = await createConversation();
+        targetConversationId = newConv._id;
       } catch (err) {
         setError('Failed to create conversation');
         return;
@@ -37,7 +42,7 @@ const Chat = () => {
     }
 
     try {
-      await sendMessage(messageText);
+      await sendMessage(messageText, targetConversationId);
     } catch (err) {
       const errorMsg = err.response?.data?.message || 'Failed to send message. Please try again.';
       setError(errorMsg);
@@ -61,7 +66,11 @@ const Chat = () => {
             ☰
           </button>
 
-          <MessageList messages={messages} loading={loading} />
+          <MessageList
+            messages={messages}
+            loading={loading}
+            messagesLoading={messagesLoading}
+          />
 
           {error && (
             <div className="chat-error">
