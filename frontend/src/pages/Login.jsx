@@ -41,6 +41,9 @@ const Login = () => {
 
   return (
     <div className="auth-page">
+      <div className="auth-bg-decoration">
+        <div className="auth-bg-orb-extra"></div>
+      </div>
       <div className="auth-card">
         <div className="auth-header">
           <h1>🧠 NeuroChat</h1>
