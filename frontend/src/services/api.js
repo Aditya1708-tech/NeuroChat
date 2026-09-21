@@ -59,6 +59,7 @@ export async function apiFetch(endpoint, options = {}) {
       netErr.retryable = true;
       throw netErr;
     }
+    
     throw err;
   }
 }
