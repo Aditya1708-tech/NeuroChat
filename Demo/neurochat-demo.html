@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NeuroChat – Your Intelligent Conversation Partner</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Plus+Jakarta+Sans:wght@600;700;800&family=Noto+Sans+Devanagari:wght@400;600&display=swap">
+<style>
+/* ===== Design tokens (spec §14.5) ===== */
+:root{--cyan4:#8B5CF6;--cyan7:#8B5CF6;--blue6:#6366F1;--purple7:#8B5CF6;--lav:#EDE9FE;--bg-page:#F8FAFC;--bg-soft:#EDE9FE;--surface:#FFFFFF;--glass:rgba(255,255,255,.78);--tx:#111827;--tx2:#6B7280;--txm:#6B7280;--border:#E5E7EB;--bs:#D1D5DB;--ok:#16A34A;--warn:#B45309;--err:#DC2626;
+--g-primary:linear-gradient(135deg,#6366F1 0%,#8B5CF6 100%);--g-soft:linear-gradient(135deg,#F5F3FF,#EDE9FE);--g-glow:radial-gradient(60% 60% at 50% 40%,rgba(139,92,246,.24),rgba(99,102,241,.14) 50%,transparent 100%);
+--r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:24px;--sh-md:0 4px 16px rgba(99,102,241,.08);--sh-lg:0 12px 40px rgba(99,102,241,.14);--gi:.16;
+--glow-sm:0 0 0 1px rgba(99,102,241,.10),0 4px 18px rgba(139,92,246,var(--gi));--glow-md:0 0 0 1px rgba(99,102,241,.16),0 8px 30px rgba(99,102,241,.22);--ring:0 0 0 3px #fff,0 0 0 5px #6366F1;
+--fh:'Plus Jakarta Sans','Noto Sans Devanagari',system-ui,sans-serif;--fb:'Inter','Noto Sans Devanagari',system-ui,sans-serif;--fm:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;--ease:cubic-bezier(.2,.8,.2,1);--dur:200ms}
+[data-theme=dark]{--bg-page:#0F1020;--bg-soft:#1B1A3A;--surface:#161730;--glass:rgba(22,23,48,.78);--tx:#F3F4F6;--tx2:#C7C9D9;--txm:#9CA3AF;--border:#2A2B4A;--bs:#3B3D63;--g-soft:linear-gradient(135deg,#1B1A3A,#241D4A);--gi:.28;--ring:0 0 0 3px #0F1020,0 0 0 5px #A5B4FC}
+@media(prefers-reduced-motion:reduce){:root{--dur:0ms}*{animation:none!important}}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{font:400 1rem/1.6 var(--fb);background:var(--bg-page);color:var(--tx);padding-top:env(safe-area-inset-top,0)}
+h1,h2,h3{font-family:var(--fh);line-height:1.2}
+a{color:var(--blue6)}
+:focus-visible{outline:none;box-shadow:var(--ring);border-radius:var(--r-sm)}
+button{font:inherit;cursor:pointer}
+.wrap{max-width:1100px;margin:auto;padding:0 20px}
+.btn{min-height:44px;padding:0 20px;border-radius:var(--r-md);border:1px solid var(--bs);background:var(--surface);color:var(--blue6);font-weight:600;transition:all var(--dur) var(--ease);text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn:hover{background:var(--bg-soft)}
+.btn.p{background:var(--g-primary);color:#fff;border:0;box-shadow:var(--glow-sm)}
+.btn.p:hover{box-shadow:var(--glow-md);transform:translateY(-1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed;box-shadow:none;transform:none}
+.ib{width:44px;height:44px;border:0;background:transparent;border-radius:var(--r-md);color:var(--tx2);font-size:18px}
+.ib:hover{background:var(--bg-soft)}
+.badge{display:inline-flex;gap:4px;align-items:center;background:var(--bg-soft);color:var(--blue6);border-radius:999px;font-size:.75rem;font-weight:600;padding:2px 10px}
+[data-theme=dark] .badge{color:#C4B5FD}
+.gt{background:var(--g-primary);-webkit-background-clip:text;background-clip:text;color:transparent}
+[data-theme=dark] .gt{background:linear-gradient(135deg,#A5B4FC,#C4B5FD);-webkit-background-clip:text;background-clip:text}
+.demo-bar{background:var(--tx);color:var(--bg-page);font-size:.8rem;text-align:center;padding:6px 12px}
+/* landing */
+nav.top{position:sticky;top:0;z-index:20;background:var(--glass);backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
+nav.top .wrap{display:flex;align-items:center;gap:12px;height:64px}
+.logo{display:flex;align-items:center;gap:8px;font:700 1.2rem var(--fh);color:var(--tx);text-decoration:none}
+.sp{flex:1}
+.links{display:flex;gap:8px;align-items:center}
+.menu-b{display:none}
+.hero{position:relative;padding:72px 0 56px;overflow:hidden}
+.hero:before{content:"";position:absolute;inset:-20% -10% auto 30%;height:120%;background:var(--g-glow);pointer-events:none}
+.hero .wrap{position:relative;display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center}
+.hero h1{font-size:clamp(2.25rem,5vw,3.75rem);font-weight:800;line-height:1.1;margin-bottom:16px}
+.hero p{color:var(--tx2);max-width:52ch;margin-bottom:24px}
+.hero .cta{display:flex;gap:12px;flex-wrap:wrap}
+.vis{background:var(--glass);backdrop-filter:blur(14px);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--sh-lg);padding:20px;display:grid;gap:12px}
+.vis .u{justify-self:end;background:var(--g-primary);color:#fff;padding:10px 14px;border-radius:16px 16px 4px 16px}
+.vis .a{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--blue6);padding:10px 14px;border-radius:16px;color:var(--tx2)}
+.dots span{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--blue6);margin-right:4px;animation:bl 1.2s infinite}
+.dots span:nth-child(2){animation-delay:.15s}.dots span:nth-child(3){animation-delay:.3s}
+@keyframes bl{0%,60%,100%{opacity:.25}30%{opacity:1}}
+section.s{padding:56px 0}
+section.s.soft{background:var(--g-soft)}
+.s h2{font-size:1.75rem;margin-bottom:8px}.s .sub{color:var(--tx2);margin-bottom:28px}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-md);padding:20px}
+.card h3{font-size:1.05rem;margin-bottom:6px}.card p{color:var(--tx2);font-size:.95rem}
+.uc{cursor:pointer;text-align:left;font:inherit;color:inherit;transition:all var(--dur) var(--ease)}
+.uc:hover{box-shadow:var(--sh-lg);transform:translateY(-2px)}
+.trust{border:1px solid var(--warn);background:var(--surface);border-left-width:4px;border-radius:var(--r-lg);padding:20px}
+.trust h3{color:var(--warn)}
+.band{padding:48px 20px;text-align:center;background:var(--g-primary);color:#fff}
+.band h2{margin-bottom:16px}.band .btn{background:#fff;color:var(--purple7);border:0}
+footer{padding:32px 0;border-top:1px solid var(--border);color:var(--tx2);font-size:.9rem}
+footer .wrap{display:flex;gap:24px;flex-wrap:wrap;justify-content:space-between}
+footer a{margin-right:14px}
+/* auth */
+.authbg{min-height:calc(100dvh - 30px);display:grid;place-items:center;padding:20px;background:var(--g-glow),var(--bg-page)}
+.auth{width:100%;max-width:440px;background:var(--glass);backdrop-filter:blur(14px);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--sh-lg);padding:28px}
+.auth h1{font-size:1.6rem;margin:12px 0 4px}
+label{display:block;font-weight:600;font-size:.9rem;margin:14px 0 4px}
+input[type=text],input[type=email],input[type=password],select{width:100%;min-height:44px;padding:0 12px;border:1px solid var(--bs);border-radius:var(--r-md);background:var(--surface);color:var(--tx);font:inherit}
+input:focus,select:focus,textarea:focus{border-color:var(--blue6);box-shadow:var(--glow-sm);outline:none}
+.err{color:var(--err);font-size:.85rem;margin-top:4px;min-height:1px}
+[data-theme=dark] .err{color:#FCA5A5}
+.meter{height:6px;background:var(--border);border-radius:9px;margin-top:6px;overflow:hidden}.meter i{display:block;height:100%;background:var(--g-primary);width:0;transition:width var(--dur)}
+.small{font-size:.85rem;color:var(--txm)}
+.or{display:flex;align-items:center;gap:10px;color:var(--txm);font-size:.85rem;margin:16px 0}.or:before,.or:after{content:"";flex:1;border-top:1px solid var(--border)}
+/* app */
+.app{display:flex;height:calc(100dvh - 30px)}
+.side{width:280px;flex:none;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:12px;gap:10px;transition:transform var(--dur) var(--ease)}
+.clist{flex:1;overflow:auto;display:grid;gap:2px;align-content:start}
+.ci{display:flex;align-items:center;border-radius:var(--r-md);min-height:44px}
+.ci button.t{flex:1;text-align:left;background:none;border:0;padding:8px 10px;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-radius:var(--r-md)}
+.ci:hover{background:var(--bg-soft)}
+.ci.on{background:var(--g-soft);box-shadow:var(--glow-sm)}
+.ci .ib{width:32px;height:32px;font-size:14px}
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.tb{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--surface)}
+.tb h2{font-size:1rem;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ml{flex:1;overflow:auto;padding:20px 16px}
+.col{max-width:760px;margin:auto;display:grid;gap:16px}
+.mu{justify-self:end;max-width:80%;background:var(--g-primary);color:#fff;padding:10px 14px;border-radius:16px 16px 4px 16px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+.ma{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--blue6);border-radius:16px;padding:12px 16px;line-height:1.65;animation:fi var(--dur) var(--ease)}
+@keyframes fi{from{opacity:0;transform:translateY(4px)}}
+.mh{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.av{width:26px;height:26px;border-radius:50%;background:var(--g-primary);box-shadow:var(--glow-sm);display:grid;place-items:center;color:#fff;font-size:12px}
+.ma p{margin:6px 0}.ma ul{margin:6px 0 6px 20px}
+.ma code{font-family:var(--fm);font-size:.875rem;background:var(--bg-soft);padding:1px 5px;border-radius:5px}
+.cb{background:var(--bg-soft);border-radius:var(--r-md);margin:8px 0;overflow:hidden}
+.cb header{display:flex;justify-content:space-between;align-items:center;padding:4px 10px;font-size:.8rem;color:var(--txm);border-bottom:1px solid var(--border)}
+.cb header button{background:none;border:0;color:var(--blue6);font-weight:600;min-height:32px}
+.cb pre{padding:10px 12px;overflow-x:auto;font:.875rem/1.6 var(--fm)}
+.acts{display:flex;gap:4px;margin-top:6px}
+.acts button{background:none;border:0;color:var(--txm);font-size:.85rem;min-height:36px;padding:0 8px;border-radius:8px}
+.acts button:hover{background:var(--bg-soft)}
+.note{margin-top:8px;font-size:.85rem;color:var(--warn);background:var(--bg-soft);border-radius:var(--r-sm);padding:6px 10px}
+.eb{background:var(--surface);border:1px solid var(--err);color:var(--err);border-radius:var(--r-md);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+[data-theme=dark] .eb{color:#FCA5A5}
+.welcome{text-align:center;padding:40px 0 10px}
+.welcome h1{font-size:2rem;margin:10px 0}
+.ex{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
+.comp{padding:8px 16px calc(8px + env(safe-area-inset-bottom,0))}
+.cbox{max-width:760px;margin:auto;display:flex;align-items:flex-end;gap:8px;background:var(--surface);border:1px solid var(--bs);border-radius:var(--r-xl);box-shadow:var(--sh-md);padding:6px 6px 6px 16px}
+.cbox:focus-within{box-shadow:var(--glow-md);border-color:var(--blue6)}
+.cbox textarea{flex:1;border:0;background:none;resize:none;font:inherit;color:var(--tx);max-height:160px;padding:9px 0;outline:none}
+.send{width:44px;height:44px;border-radius:50%;border:0;background:var(--g-primary);color:#fff;font-size:18px}
+.send:disabled{opacity:.5;cursor:not-allowed}
+.disc{max-width:760px;margin:6px auto 0;text-align:center;font-size:.78rem;color:var(--txm)}
+.ov{position:fixed;inset:0;background:rgba(15,23,42,.5);display:grid;place-items:center;z-index:50;padding:16px}
+.dlg{background:var(--surface);border-radius:var(--r-xl);padding:24px;max-width:440px;width:100%;box-shadow:var(--sh-lg)}
+.dlg h3{margin-bottom:8px}.dlg .row{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--tx);color:var(--bg-page);padding:10px 18px;border-radius:999px;z-index:60;font-size:.9rem}
+.set{max-width:640px;margin:0 auto;padding:24px 16px;display:grid;gap:16px;overflow:auto}
+.nf{min-height:70vh;display:grid;place-items:center;text-align:center}
+.nf b{font:800 7rem/1 var(--fh);background:var(--g-primary);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 8px 24px rgba(99,102,241,.3))}
+.skel{height:14px;border-radius:8px;background:linear-gradient(90deg,var(--bg-soft),var(--border),var(--bg-soft));background-size:200% 100%;animation:sh 1.4s infinite}
+@keyframes sh{to{background-position:-200% 0}}
+@media(max-width:1023px){.side{position:fixed;z-index:40;inset:30px auto 0 0;transform:translateX(-100%)}.side.open{transform:none;box-shadow:var(--sh-lg)}.mob{display:inline-block!important}}
+.mob{display:none}
+@media(max-width:900px){.hero .wrap{grid-template-columns:1fr}.grid,.g4{grid-template-columns:1fr 1fr}}
+@media(max-width:767px){.links.d{display:none}.menu-b{display:block}.links.d.show{display:flex;position:absolute;top:64px;left:0;right:0;flex-direction:column;background:var(--surface);padding:12px;border-bottom:1px solid var(--border)}.grid,.g4,.ex{grid-template-columns:1fr}.mu{max-width:90%}}
+
+/* ===== SaaS landing ===== */
+.pill{display:inline-flex;align-items:center;gap:8px;padding:6px 14px 6px 6px;border:1px solid var(--border);background:var(--glass);border-radius:999px;font-size:.85rem;color:var(--tx2);box-shadow:var(--sh-md)}
+.pill b{background:var(--g-primary);color:#fff;border-radius:999px;padding:2px 10px;font-size:.75rem}
+.h{position:relative;text-align:center;padding:72px 0 0;overflow:hidden}
+.h:before{content:"";position:absolute;left:50%;top:-10%;width:1100px;max-width:160%;height:700px;transform:translateX(-50%);background:var(--g-glow);pointer-events:none}
+.h .wrap{position:relative}
+.h h1{font-size:clamp(2.4rem,6vw,4.25rem);font-weight:800;letter-spacing:-.02em;margin:22px auto 16px;max-width:15ch}
+.h p.lead{color:var(--tx2);font-size:1.15rem;max-width:56ch;margin:0 auto 28px}
+.h .cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.h .fine{margin-top:14px;font-size:.85rem;color:var(--txm)}
+.frame{margin:48px auto 0;max-width:980px;border:1px solid var(--border);border-radius:20px 20px 0 0;background:var(--surface);box-shadow:0 30px 80px rgba(99,102,241,.22),var(--glow-md);overflow:hidden;text-align:left}
+.fbar{display:flex;gap:6px;align-items:center;padding:10px 14px;background:var(--bg-soft);border-bottom:1px solid var(--border)}
+.fbar i{width:10px;height:10px;border-radius:50%;background:var(--bs)}
+.fbar span{margin:0 auto;font-size:.75rem;color:var(--txm);background:var(--surface);border-radius:8px;padding:2px 40px}
+.fbody{display:grid;grid-template-columns:230px 1fr;min-height:340px}
+.fside{border-right:1px solid var(--border);padding:12px;display:grid;gap:6px;align-content:start;background:var(--surface)}
+.fside .fake{height:36px;border-radius:10px;background:var(--bg-soft);padding:8px 10px;font-size:.85rem;color:var(--tx2);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.fside .fake.on{background:var(--g-soft);box-shadow:var(--glow-sm);color:var(--tx)}
+.fmain{padding:20px;display:grid;gap:12px;align-content:start;background:var(--bg-page)}
+.fmain .mu{max-width:70%}
+.logos{padding:36px 0 8px;text-align:center;color:var(--txm);font-size:.85rem}
+.logos div{display:flex;gap:28px;justify-content:center;flex-wrap:wrap;margin-top:12px;font:700 1.05rem var(--fh);color:var(--tx2)}
+.sec{padding:80px 0}
+.sec.soft{background:var(--g-soft)}
+.sh{text-align:center;max-width:640px;margin:0 auto 40px}
+.sh h2{font-size:clamp(1.8rem,3.5vw,2.6rem);letter-spacing:-.01em;margin:12px 0 10px}
+.sh p{color:var(--tx2)}
+.bento{display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
+.bc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:24px;box-shadow:var(--sh-md);overflow:hidden;display:flex;flex-direction:column;gap:8px}
+.bc h3{font-size:1.1rem}.bc p{color:var(--tx2);font-size:.95rem}
+.c2{grid-column:span 2}.c3{grid-column:span 3}.c4{grid-column:span 4}
+.ico{width:40px;height:40px;border-radius:12px;background:var(--g-soft);border:1px solid var(--border);display:grid;place-items:center;font-size:18px}
+.mini{margin-top:auto;display:grid;gap:6px;padding-top:10px}
+.mini .fake{border-radius:10px;background:var(--bg-soft);padding:6px 10px;font-size:.8rem;color:var(--tx2)}
+.mini .lang{display:flex;gap:6px;flex-wrap:wrap}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;position:relative}
+.stp{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:22px;box-shadow:var(--sh-md)}
+.stp .n{width:34px;height:34px;border-radius:50%;background:var(--g-primary);color:#fff;display:grid;place-items:center;font-weight:700;margin-bottom:12px;box-shadow:var(--glow-sm)}
+.tabs{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:24px}
+.tab{min-height:44px;padding:0 18px;border-radius:999px;border:1px solid var(--bs);background:var(--surface);color:var(--tx2);font-weight:600}
+.tab[aria-selected=true]{background:var(--g-primary);color:#fff;border-color:transparent;box-shadow:var(--glow-sm)}
+.tp{max-width:720px;margin:auto;display:grid;gap:12px}
+.faq{max-width:760px;margin:auto;display:grid;gap:10px}
+.faq details{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:4px 18px}
+.faq summary{min-height:48px;display:flex;align-items:center;cursor:pointer;font-weight:600;list-style:none;justify-content:space-between}
+.faq summary::after{content:"+";color:var(--blue6);font-size:1.3rem}
+.faq details[open] summary::after{content:"–"}
+.faq p{color:var(--tx2);padding-bottom:14px}
+.cta2{margin:0 20px;border-radius:32px;background:var(--g-primary);color:#fff;text-align:center;padding:64px 20px;position:relative;overflow:hidden;box-shadow:var(--sh-lg)}
+.cta2:before{content:"";position:absolute;inset:-40% -10% auto;height:120%;background:radial-gradient(50% 50% at 50% 50%,rgba(255,255,255,.22),transparent)}
+.cta2>*{position:relative}.cta2 h2{font-size:clamp(1.8rem,4vw,2.8rem);margin-bottom:10px}.cta2 p{opacity:.9;margin-bottom:22px}
+.cta2 .btn{background:#fff;color:var(--purple7);border:0}
+.fcols{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:32px}
+.fcols h4{font:700 .9rem var(--fh);margin-bottom:10px;color:var(--tx)}
+.fcols a{display:block;margin:0 0 8px;color:var(--tx2);text-decoration:none}
+.fcols a:hover{color:var(--blue6)}
+@media(max-width:900px){.bento{grid-template-columns:1fr 1fr}.c2,.c3,.c4{grid-column:span 2}.steps{grid-template-columns:1fr 1fr}.fcols{grid-template-columns:1fr 1fr}}
+@media(max-width:767px){.fbody{grid-template-columns:1fr}.fside{display:none}.steps,.bento{grid-template-columns:1fr}.c2,.c3,.c4{grid-column:auto}.fcols{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="demo-bar">Frontend demo · mock data only · no backend or real AI yet · try “/fail” in chat to see the error + Retry state</div>
+<div id="root"></div>
+<script>
+/* ===== Storage helpers (try/catch per spec: storage may be empty) ===== */
+const ls={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+/* ===== i18n (EN + HI MVP; all UI strings via t()) ===== */
+const I={en:{features:'Features',how:'How it works',login:'Log in',register:'Register',start:'Start Chatting →',learn:'Learn more',newchat:'New chat',search:'Search conversations',ask:'Ask NeuroChat anything…',disc:'NeuroChat is AI and can make mistakes. Verify important information.',hello:'How can I help you today?',empty:'Your conversations will appear here',nomatch:'No conversations match',logout:'Log out',settings:'Settings',thinking:'NeuroChat is thinking'},
+hi:{features:'सुविधाएँ',how:'यह कैसे काम करता है',login:'लॉग इन',register:'रजिस्टर करें',start:'चैट शुरू करें →',learn:'और जानें',newchat:'नई चैट',search:'बातचीत खोजें',ask:'NeuroChat से कुछ भी पूछें…',disc:'NeuroChat एक AI है और गलतियाँ कर सकता है। ज़रूरी जानकारी जाँच लें।',hello:'आज मैं आपकी कैसे मदद कर सकता हूँ?',empty:'आपकी बातचीत यहाँ दिखेगी',nomatch:'कोई बातचीत नहीं मिली',logout:'लॉग आउट',settings:'सेटिंग्स',thinking:'NeuroChat सोच रहा है'}};
+const t=k=>(I[S.lang]||I.en)[k]||I.en[k]||k;
+/* ===== State ===== */
+const S={user:ls.get('nc-user',null),users:ls.get('nc-users',[]),convs:ls.get('nc-convs',[]),lang:ls.get('nc-lang','en'),reply:ls.get('nc-reply','auto'),theme:ls.get('nc-theme','light'),onb:ls.get('nc-onb',false),q:'',busy:false,err:null,drawer:false,modal:null};
+const save=()=>{ls.set('nc-user',S.user);ls.set('nc-users',S.users);ls.set('nc-convs',S.convs);ls.set('nc-lang',S.lang);ls.set('nc-reply',S.reply);ls.set('nc-theme',S.theme);ls.set('nc-onb',S.onb)};
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LOGO=(s=28)=>`<svg width="${s}" height="${s}" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6366F1"/><stop offset="1" stop-color="#8B5CF6"/></linearGradient></defs><path d="M6 5h20a3 3 0 013 3v13a3 3 0 01-3 3H15l-6 5v-5H6a3 3 0 01-3-3V8a3 3 0 013-3z" fill="none" stroke="url(#lg)" stroke-width="2.4"/><g stroke="url(#lg)" stroke-width="1.6"><path d="M16 10l-5 8h10z" fill="none"/></g><g fill="url(#lg)"><circle cx="16" cy="10" r="2.2"/><circle cx="11" cy="18" r="2.2"/><circle cx="21" cy="18" r="2.2"/></g></svg>`;
+const wordmark=`<span class="logo">${LOGO()}<span><span class="gt">Neuro</span>Chat</span></span>`;
+function toast(m,ms=3000){const e=document.createElement('div');e.className='toast';e.setAttribute('role','status');e.textContent=m;document.body.append(e);setTimeout(()=>e.remove(),ms)}
+/* ===== Mock AI (stands in for POST /api/conversations/:id/messages → Gemini) ===== */
+const KB={java:{m:/\bjava\b|जावा/i,a:"**Java** is a general-purpose, object-oriented programming language that runs on the Java Virtual Machine (JVM), so the same code can run on many platforms.\n\n```java\npublic class Hello {\n  public static void main(String[] a) {\n    System.out.println(\"Hello, NeuroChat!\");\n  }\n}\n```\nIt is widely used for Android apps, backend services and enterprise software.",f:"Main advantages of **Java**:\n\n- **Platform independent** – write once, run on any JVM\n- **Strongly typed and object-oriented** – catches many errors early\n- **Large ecosystem** – libraries, frameworks and tooling\n- **Automatic memory management** – garbage collection\n- **Good for large teams** – stable, well-documented"},
+python:{m:/\bpython\b/i,a:"**Python** is a readable, high-level language popular for scripting, data analysis and AI.\n\n```python\nprint('Hello, NeuroChat!')\n```",f:"Advantages of **Python**: simple syntax, huge library ecosystem, fast prototyping and strong community support."},
+photo:{m:/photosynthesis/i,a:"**Photosynthesis** is how plants turn light, water and carbon dioxide into glucose and oxygen. It happens in chloroplasts, using chlorophyll to capture light energy.",f:"Photosynthesis matters because it produces the oxygen we breathe and forms the base of most food chains."}};
+const SENS=/\b(dose|dosage|medicine|medication|symptom|diagnos|lawsuit|legal|sue|invest|stock|loan|tax|emergency)\b/i;
+function aiReply(conv,text){
+ for(const k in KB)if(KB[k].m.test(text)){conv.topic=k;return KB[k].a}
+ if(conv.topic&&/advantage|benefit|why|its|फायदे|इसके/i.test(text))return KB[conv.topic].f;
+ if(/^(hi|hello|hey|नमस्ते)/i.test(text))return S.reply==='hi'||/[\u0900-\u097F]/.test(text)?"नमस्ते! मैं NeuroChat हूँ। आज मैं आपकी कैसे मदद कर सकता हूँ?":"Hello! I'm NeuroChat. What would you like to talk about?";
+ return "This is a **demo reply**. In the real build, this message goes to the backend, which calls Gemini with your recent messages as context.\n\nYou asked: “"+text.slice(0,120)+"”\n\nTry: *What is Java?* then *What are its advantages?* to see multi-turn context.";
+}
+/* ===== Utils ===== */
+const title=s=>{s=s.replace(/[#*`>_\n]+/g,' ').replace(/\s+/g,' ').trim();const a=Array.from(s);return a.length>60?a.slice(0,60).join('')+'…':s};
+function md(src){ /* safe Markdown: escape first, no raw HTML */
+ let h=esc(src);const blocks=[];
+ h=h.replace(/```(\w*)\n([\s\S]*?)```/g,(_,l,c)=>{blocks.push(`<div class="cb"><header><span>${l||'code'}</span><button data-copy="${btoa(unescape(encodeURIComponent(c)))}">Copy</button></header><pre><code>${c}</code></pre></div>`);return '\u0000'+(blocks.length-1)+'\u0000'});
+ h=h.replace(/`([^`\n]+)`/g,'<code>$1</code>').replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/\*([^*\n]+)\*/g,'<i>$1</i>');
+ h=h.split(/\n{2,}/).map(p=>/^\s*- /.test(p)?'<ul>'+p.split('\n').map(l=>'<li>'+l.replace(/^\s*- /,'')+'</li>').join('')+'</ul>':'<p>'+p.replace(/\n/g,'<br>')+'</p>').join('');
+ return h.replace(/\u0000(\d+)\u0000/g,(_,i)=>blocks[i]).replace(/<p>(<div class="cb">[\s\S]*?<\/div>)<\/p>/g,'$1');
+}
+const rel=ts=>{const m=Math.round((Date.now()-ts)/60000);return m<1?'just now':m<60?m+' min ago':new Date(ts).toLocaleDateString()};
+/* ===== Router ===== */
+const route=()=>location.hash.replace(/^#/,'')||'/';
+const go=p=>{location.hash=p};
+window.addEventListener('hashchange',()=>{S.err=null;S.drawer=false;render()});
+/* ===== Views ===== */
+function nav(){return `<nav class="top"><div class="wrap"><a href="#/" class="logo" aria-label="NeuroChat home">${wordmark}</a><div class="sp"></div><div class="links d" id="lk"><a class="btn" style="border:0" href="#/" data-sc="features">${t('features')}</a><a class="btn" style="border:0" href="#/" data-sc="how">${t('how')}</a><a class="btn" style="border:0" href="#/" data-sc="usecases">Use cases</a><a class="btn" style="border:0" href="#/" data-sc="faq">FAQ</a>${S.user?`<a class="btn p" href="#/chat">Open NeuroChat</a>`:`<a class="btn" href="#/login">${t('login')}</a><a class="btn p" href="#/register">${t('register')}</a>`}</div><button class="ib menu-b" id="mb" aria-label="Menu">☰</button></div></nav>`}
+function landing(){
+ const B=[['c4','💬','Intelligent conversations','Ask in plain language and get structured answers with formatted code, lists and tables.',`<div class="mini"><div class="mu" style="justify-self:end;max-width:75%">Explain photosynthesis simply</div><div class="fake">Plants turn light, water and CO₂ into glucose and oxygen…</div></div>`],['c2','🧠','Context-aware','Follow-ups use your earlier messages, so you never repeat yourself.',`<div class="mini"><div class="fake">What is Java?</div><div class="fake">…and its advantages? ✓ knows it's Java</div></div>`],['c2','🗂️','Conversation history','Every chat is saved, titled automatically and searchable.',`<div class="mini"><div class="fake">What is Java?</div><div class="fake">Plan a 3-day Python study…</div></div>`],['c2','🔐','Secure sign-in','Email and password or Google. Session cookie is httpOnly; the AI key never reaches your browser.',''],['c2','🌐','Multilingual','English and Hindi interface. Replies follow the language you write in.',`<div class="mini"><div class="lang"><span class="badge">English</span><span class="badge">हिन्दी</span><span class="badge">Hinglish</span></div></div>`],['c3','📱','Responsive','Desktop sidebar becomes a mobile drawer. Composer respects the on-screen keyboard.',''],['c3','✨','AI-powered assistance','Powered by Google Gemini, called only from our server, and labelled AI-generated on every reply.','']];
+ const St=[['Create your account','Register with email or continue with Google.'],['Ask anything','Type a question or tap an example prompt.'],['Keep talking','Follow-up questions use the earlier conversation.'],['Come back later','Your history is saved and searchable.']];
+ const W=[['Clear guidance','Onboarding and example prompts help first-time users start.'],['Honest limits','Every answer is labelled AI-generated, with a verify note on sensitive topics.'],['Your history, kept','Conversations persist across sessions and devices.'],['Built from research','Our earlier study of 80 users shaped these goals. [INSERT ONE REAL STAT]']];
+ const U=[['Students','Explain photosynthesis simply','**Photosynthesis** is how plants turn light, water and CO₂ into glucose and oxygen, inside chloroplasts.'],['Developers','What is Java?','**Java** is an object-oriented language that runs on the JVM, so code runs on many platforms.'],['Professionals','Draft a polite follow-up email','Subject: Following up. Hi Priya, just checking in on the proposal we discussed…'],['Creators','Give me 5 blog title ideas about travel','1. Ten Trains Worth Missing Your Flight For… (sample output)'],['Everyone','Suggest a 3-day plan to learn Python','Day 1: variables and loops. Day 2: functions and files. Day 3: a small project.']];
+ const uc=S.uc||0;
+ const FQ=[['Does NeuroChat browse the web?','No. It answers from the AI model only, so information can be incomplete or out of date. Verify anything important.'],['Which AI powers it?','Google Gemini. NeuroChat does not train or host its own model; requests go through our server, never straight from your browser.'],['Are my conversations saved?','Yes. Conversations and messages are stored against your account so you can search, reopen, rename or delete them.'],['Which languages does it support?','The interface is in English and Hindi. You can write in other languages too, and reply quality depends on the model.'],['Is NeuroChat always right?','No. AI can be wrong. For medical, legal, financial or safety decisions, check with a qualified professional or official source.']];
+ return nav()+`<header class="h"><div class="wrap"><span class="pill"><b>New</b> Conversations that remember context</span><h1>Your intelligent <span class="gt">conversation partner</span></h1><p class="lead">Ask anything, follow up naturally, and pick up any chat where you left off. Every conversation is saved, searchable and clearly labelled as AI-generated.</p><div class="cta"><a class="btn p" style="min-height:52px;padding:0 28px" href="#/register">${t('start')}</a><a class="btn" style="min-height:52px;padding:0 24px" href="#/" data-sc="how">See how it works</a></div><div class="fine">Sign in with email or Google · Interface in English and हिन्दी</div>
+ <div class="frame" aria-hidden="true"><div class="fbar"><i></i><i></i><i></i><span>neurochat.app/chat</span></div><div class="fbody"><div class="fside"><div class="fake" style="background:var(--g-primary);color:#fff">＋ New chat</div><div class="fake on">What is Java?</div><div class="fake">Photosynthesis simply</div><div class="fake">Python study plan</div><div class="fake">नमस्ते, मुझे जावा समझाओ</div></div><div class="fmain"><div class="mu">What is Java?</div><div class="ma"><div class="mh"><span class="av">✦</span><b>NeuroChat</b><span class="badge">✦ AI-generated</span></div><b>Java</b> is an object-oriented language that runs on the JVM, so the same code works on many platforms.</div><div class="mu">What are its advantages?</div><div class="ma"><span class="dots"><span></span><span></span><span></span></span></div></div></div></div></div></header>
+ <div class="logos"><div class="wrap">Built with a modern full-stack<div><span>React</span><span>Node.js</span><span>Express</span><span>MongoDB</span><span>Google Gemini</span></div></div></div>
+ <section class="sec" id="features"><div class="wrap"><div class="sh"><span class="badge">Features</span><h2>Everything you need to hold a real conversation</h2><p>Seven capabilities, described exactly as they work today.</p></div><div class="bento">${B.map(b=>`<div class="bc ${b[0]}"><div class="ico">${b[1]}</div><h3>${b[2]}</h3><p>${b[3]}</p>${b[4]}</div>`).join('')}</div></div></section>
+ <section class="sec soft" id="how"><div class="wrap"><div class="sh"><span class="badge">How it works</span><h2>From sign-up to saved history in four steps</h2></div><div class="steps">${St.map((x,i)=>`<div class="stp"><div class="n">${i+1}</div><h3>${x[0]}</h3><p style="color:var(--tx2);font-size:.95rem">${x[1]}</p></div>`).join('')}</div></div></section>
+ <section class="sec" id="usecases"><div class="wrap"><div class="sh"><span class="badge">Use cases</span><h2>Made for how you actually ask</h2></div><div class="tabs" role="tablist">${U.map((u,i)=>`<button class="tab" role="tab" aria-selected="${i===uc}" data-tab="${i}">${u[0]}</button>`).join('')}</div><div class="tp"><div class="mu" style="justify-self:end">${esc(U[uc][1])}</div><div class="ma"><div class="mh"><span class="av">✦</span><b>NeuroChat</b><span class="badge">✦ AI-generated</span></div>${md(U[uc][2])}<div class="small" style="margin-top:6px">Sample output for illustration.</div></div><button class="btn p" style="justify-self:center" data-try="${esc(U[uc][1])}">Try this prompt</button></div></div></section>
+ <section class="sec soft"><div class="wrap"><div class="sh"><span class="badge">Why NeuroChat</span><h2>Designed around what people asked for</h2></div><div class="bento">${W.map(x=>`<div class="bc c3"><h3>${x[0]}</h3><p>${x[1]}</p></div>`).join('')}</div></div></section>
+ <section class="sec"><div class="wrap"><div class="trust"><h3>AI can be wrong</h3><p>Answers may be inaccurate, incomplete or out of date. NeuroChat does not browse the web. For medical, legal, financial or safety decisions, verify with a qualified professional or official source.</p></div></div></section>
+ <section class="sec" id="faq" style="padding-top:0"><div class="wrap"><div class="sh"><span class="badge">FAQ</span><h2>Questions, answered plainly</h2></div><div class="faq">${FQ.map(q=>`<details><summary>${q[0]}</summary><p>${q[1]}</p></details>`).join('')}</div></div></section>
+ <div class="cta2"><h2>Start your first conversation</h2><p>Create an account in under a minute.</p><a class="btn" style="min-height:52px;padding:0 28px" href="#/register">${t('start')}</a></div>
+ <footer style="margin-top:64px"><div class="wrap"><div class="fcols" style="width:100%"><div>${wordmark}<p class="small" style="margin-top:8px;max-width:30ch">Your Intelligent Conversation Partner. A BCA Semester 5 field project.</p></div><div><h4>Product</h4><a href="#/" data-sc="features">Features</a><a href="#/" data-sc="how">How it works</a><a href="#/" data-sc="usecases">Use cases</a><a href="#/" data-sc="faq">FAQ</a></div><div><h4>Account</h4><a href="#/login">Log in</a><a href="#/register">Register</a></div><div><h4>Legal</h4><a href="#/privacy">Privacy</a><a href="#/terms">Terms</a><a href="mailto:college-email@example.edu">Contact</a></div></div></div></footer>`}
+function authView(reg){
+ return `<div class="authbg"><form class="auth" id="af" novalidate><a href="#/" aria-label="Home">${wordmark}</a><h1>${reg?'Create your account':'Welcome back'}</h1><p class="small">${reg?'Start saving your conversations.':'Log in to continue.'}</p>
+ ${reg?`<label for="nm">Full name</label><input id="nm" type="text" autocomplete="name"><div class="err" id="e-nm"></div>`:''}
+ <label for="em">Email</label><input id="em" type="email" autocomplete="email"><div class="err" id="e-em"></div>
+ <label for="pw">Password</label><input id="pw" type="password" autocomplete="${reg?'new':'current'}-password"><label class="small" style="font-weight:400;display:flex;gap:6px;align-items:center;margin:6px 0 0"><input type="checkbox" id="sp"> Show password</label>
+ ${reg?`<div class="meter"><i id="mt"></i></div><div class="small" id="mtx">Use 8+ characters, a letter and a number.</div>`:''}<div class="err" id="e-pw"></div>
+ ${reg?`<label for="cp">Confirm password</label><input id="cp" type="password" autocomplete="new-password"><div class="err" id="e-cp"></div>`:`<label class="small" style="font-weight:400;display:flex;gap:6px;align-items:center"><input type="checkbox" id="rm"> Remember me</label>`}
+ <div class="err" id="e-f" role="alert" style="margin:10px 0"></div>
+ <button class="btn p" style="width:100%" id="sb">${reg?'Create account':'Log in'}</button>
+ <div class="or">or</div><button type="button" class="btn" style="width:100%" id="gg">Continue with Google (demo)</button>
+ <p class="small" style="margin-top:16px;text-align:center">${reg?'Already registered? <a href="#/login">Log in</a>':'New here? <a href="#/register">Create an account</a>'}</p></form></div>`}
+function sidebar(){
+ const list=S.convs.filter(c=>c.title.toLowerCase().includes(S.q.toLowerCase())).sort((a,b)=>b.updated-a.updated);
+ const id=route().split('/')[2];
+ return `<aside class="side ${S.drawer?'open':''}" id="sd" aria-label="Conversations"><a href="#/" class="logo" style="padding:4px 6px">${wordmark}</a><button class="btn p" id="nc">＋ ${t('newchat')}</button><input type="text" id="sq" placeholder="${t('search')}" aria-label="${t('search')}" value="${esc(S.q)}"><div class="clist">${list.length?list.map(c=>`<div class="ci ${c.id===id?'on':''}"><button class="t" data-open="${c.id}" title="${esc(c.title)}">${esc(c.title)}</button><button class="ib" data-ren="${c.id}" aria-label="Rename">✎</button><button class="ib" data-del="${c.id}" aria-label="Delete">🗑</button></div>`).join(''):`<p class="small" style="padding:12px">${S.convs.length?t('nomatch'):t('empty')}</p>`}</div><div style="border-top:1px solid var(--border);padding-top:10px;display:grid;gap:4px"><div style="font-weight:600;padding:0 6px">${esc(S.user.name)}</div><a class="btn" style="border:0;justify-content:flex-start" href="#/settings">⚙ ${t('settings')}</a><button class="btn" style="border:0;justify-content:flex-start" id="lo">⎋ ${t('logout')}</button></div></aside>`}
+function msgHTML(m,i,last){
+ if(m.role==='user')return `<div class="mu" title="${new Date(m.ts).toLocaleString()}">${esc(m.text)}</div>`;
+ return `<div class="ma" title="${new Date(m.ts).toLocaleString()}"><div class="mh"><span class="av">✦</span><b>NeuroChat</b><span class="badge">✦ AI-generated</span></div>${md(m.text)}${m.sens?'<div class="note">This looks like a health/legal/financial/safety topic. Please verify with a qualified professional or an official source.</div>':''}<div class="acts"><button data-cp="${i}">Copy</button>${last?'<button data-rg>Retry</button>':''}</div></div>`}
+function chatView(){
+ const id=route().split('/')[2];const c=id&&S.convs.find(x=>x.id===id);
+ if(id&&!c)return `<div class="app">${sidebar()}<main class="main"><div class="nf"><div><b>404</b><p>Conversation not found.</p><a class="btn p" href="#/chat" style="margin-top:12px">Open chat</a></div></div></main></div>`;
+ const msgs=c?c.msgs:[];
+ const ex=['What is Java?','Explain photosynthesis simply','Draft a polite follow-up email','Suggest a 3-day plan to learn Python'];
+ return `<div class="app">${sidebar()}<main class="main"><div class="tb"><button class="ib mob" id="dm" aria-label="Open menu">☰</button><h2>${c?esc(c.title):'NeuroChat'}</h2></div><div class="ml" id="ml"><div class="col">${msgs.length?msgs.map((m,i)=>msgHTML(m,i,i===msgs.length-1&&m.role==='ai')).join(''):`<div class="welcome"><div style="display:inline-block;filter:drop-shadow(0 0 18px rgba(139,92,246,.5))">${LOGO(56)}</div><h1>${t('hello')}</h1><div class="ex">${ex.map(e=>`<button class="btn" data-ex="${esc(e)}">${e}</button>`).join('')}</div><p><button class="btn" style="border:0;margin-top:12px" id="ob">Show onboarding</button></p></div>`}${S.busy?`<div class="ma" aria-live="polite"><span class="dots"><span></span><span></span><span></span></span> <span class="small">${t('thinking')}</span></div>`:''}${S.err?`<div class="eb" role="alert"><span>${S.err}</span><button class="btn" data-rg>Retry</button></div>`:''}</div></div><div class="comp"><div class="cbox"><textarea id="ta" rows="1" placeholder="${t('ask')}" aria-label="Message" ${S.busy?'disabled':''}></textarea><span class="small" id="cc" style="align-self:center"></span><button class="send" id="snd" aria-label="Send" disabled>➤</button></div><div class="disc">${t('disc')}</div></div></main></div>`}
+function settings(){return `<div class="app">${sidebar()}<main class="main"><div class="tb"><button class="ib mob" id="dm" aria-label="Open menu">☰</button><h2>${t('settings')}</h2></div><div class="set"><div class="card"><h3>Profile</h3><label for="sn">Name</label><input id="sn" type="text" value="${esc(S.user.name)}"><label>Email</label><input type="text" value="${esc(S.user.email)}" disabled></div><div class="card"><h3>Preferences</h3><label for="ul">Interface language</label><select id="ul"><option value="en" ${S.lang==='en'?'selected':''}>English</option><option value="hi" ${S.lang==='hi'?'selected':''}>हिन्दी</option><option disabled>मराठी (planned)</option></select><label for="rl">Reply language</label><select id="rl">${[['auto','Auto'],['en','English'],['hi','हिन्दी']].map(o=>`<option value="${o[0]}" ${S.reply===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select><label for="th">Theme</label><select id="th"><option value="light" ${S.theme==='light'?'selected':''}>Light</option><option value="dark" ${S.theme==='dark'?'selected':''}>Dark</option></select></div><div class="card"><h3>About the AI</h3><p>AI can be wrong. NeuroChat does not browse the web.</p><button class="btn" id="ob" style="margin-top:10px">Show onboarding again</button></div></div></main></div>`}
+function legal(k){return nav()+`<div class="wrap" style="padding:48px 20px;max-width:760px"><h1>${k==='privacy'?'Privacy':'Terms'}</h1><p style="margin-top:12px;color:var(--tx2)">${k==='privacy'?'Placeholder page. Your messages are sent to a third-party AI provider (Google Gemini) via our server to produce replies. Final text must match Security Architecture §26.9 of the specification.':'Placeholder page. NeuroChat is an academic project; answers may be inaccurate. Final terms to be written.'}</p></div>`}
+function notFound(){return nav()+`<div class="nf"><div><b>404</b><h2>We couldn't find that page</h2><p style="margin:8px 0 16px;color:var(--tx2)">The link may be wrong or the page moved.</p><a class="btn p" href="#/">Go home</a> <a class="btn" href="#/chat">Open chat</a></div></div>`}
+function modal(){
+ if(S.modal==='onb'){const C=[['Welcome to NeuroChat','Ask questions, get answers, and keep every conversation.'],['How conversations work','Follow-ups use earlier messages. Titles come from your first message. History is saved in the sidebar.'],['Use it responsibly','AI can be wrong. Verify important answers.']];const s=S.step||0;return `<div class="ov" role="dialog" aria-modal="true"><div class="dlg"><span class="badge">${s+1} of 3</span><h3 style="margin-top:8px">${C[s][0]}</h3><p style="color:var(--tx2)">${C[s][1]}</p><div class="row"><button class="btn" data-onb="skip">Dismiss</button><button class="btn p" data-onb="next">${s<2?'Next':'Got it'}</button></div></div></div>`}
+ if(S.modal&&S.modal.del){const c=S.convs.find(x=>x.id===S.modal.del);return `<div class="ov" role="dialog" aria-modal="true"><div class="dlg"><h3>Delete conversation?</h3><p style="color:var(--tx2)">“${esc(c.title)}” and its messages will be deleted. This cannot be undone.</p><div class="row"><button class="btn" data-m="no">Cancel</button><button class="btn p" data-m="yes">Delete</button></div></div></div>`}
+ if(S.modal&&S.modal.ren){const c=S.convs.find(x=>x.id===S.modal.ren);return `<div class="ov" role="dialog" aria-modal="true"><div class="dlg"><h3>Rename conversation</h3><input type="text" id="rn" maxlength="100" value="${esc(c.title)}" aria-label="New title"><div class="row"><button class="btn" data-m="no">Cancel</button><button class="btn p" data-m="rs">Save</button></div></div></div>`}
+ return ''}
+/* ===== Render ===== */
+function render(){
+ document.documentElement.dataset.theme=S.theme;document.documentElement.lang=S.lang;
+ const r=route(),root=$('#root');const prot=/^\/(chat|settings)/.test(r);
+ if(prot&&!S.user){go('/login?redirect='+encodeURIComponent(r));return}
+ if(S.user&&/^\/(login|register)/.test(r)){go('/chat');return}
+ let h;
+ if(r==='/'||r.startsWith('/#'))h=landing();else if(r.startsWith('/login'))h=authView(0);else if(r==='/register')h=authView(1);else if(r==='/privacy'||r==='/terms')h=legal(r.slice(1));else if(r.startsWith('/chat'))h=chatView();else if(r==='/settings')h=settings();else h=notFound();
+ root.innerHTML=h+modal();wire();
+ const ml=$('#ml');if(ml)ml.scrollTop=ml.scrollHeight;
+ if(S.modal&&S.modal.ren){const i=$('#rn');i&&i.focus()}
+}
+/* ===== Events ===== */
+function wire(){
+ const on=(s,ev,f)=>{const e=$(s);e&&e.addEventListener(ev,f)};
+ on('#mb','click',()=>$('#lk').classList.toggle('show'));
+ document.querySelectorAll('[data-try]').forEach(b=>b.onclick=()=>{S.pending=b.dataset.try;go(S.user?'/chat':'/register')});
+ document.querySelectorAll('[data-sc]').forEach(a=>a.onclick=e=>{e.preventDefault();const el=document.getElementById(a.dataset.sc);if(el)el.scrollIntoView({behavior:'smooth'});else{go('/');setTimeout(()=>{const x=document.getElementById(a.dataset.sc);x&&x.scrollIntoView()},50)}});
+ document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{const y=scrollY;S.uc=+b.dataset.tab;render();scrollTo(0,y)});
+ const af=$('#af');if(af)authWire(af);
+ on('#nc','click',()=>go('/chat'));on('#dm','click',()=>{S.drawer=!S.drawer;$('#sd').classList.toggle('open',S.drawer)});
+ on('#lo','click',()=>{S.user=null;save();go('/');toast('Logged out')});
+ on('#sq','input',e=>{S.q=e.target.value;clearTimeout(S.dt);S.dt=setTimeout(()=>{render();const q=$('#sq');q.focus();q.setSelectionRange(q.value.length,q.value.length)},300)});
+ document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{S.err=null;go('/chat/'+b.dataset.open)});
+ document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{S.modal={del:b.dataset.del};render()});
+ document.querySelectorAll('[data-ren]').forEach(b=>b.onclick=()=>{S.modal={ren:b.dataset.ren};render()});
+ document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{const m=S.modal,a=b.dataset.m;S.modal=null;if(a==='yes'){S.convs=S.convs.filter(c=>c.id!==m.del);save();if(route().includes(m.del))go('/chat');toast('Conversation deleted')}if(a==='rs'){const v=($('#rn')||{}).value;if(v&&v.trim()){S.convs.find(c=>c.id===m.ren).title=v.trim();save()}else{toast('Title cannot be empty')}}render()});
+ document.querySelectorAll('[data-ex]').forEach(b=>b.onclick=()=>send(b.dataset.ex));
+ document.querySelectorAll('[data-cp]').forEach(b=>b.onclick=()=>{const c=S.convs.find(x=>x.id===route().split('/')[2]);navigator.clipboard&&navigator.clipboard.writeText(c.msgs[b.dataset.cp].text).then(()=>toast('Copied'),()=>toast('Copy blocked by browser'))});
+ document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(decodeURIComponent(escape(atob(b.dataset.copy)))).then(()=>{b.textContent='Copied';setTimeout(()=>b.textContent='Copy',1500)},()=>toast('Copy blocked by browser'))});
+ document.querySelectorAll('[data-rg]').forEach(b=>b.onclick=retry);
+ document.querySelectorAll('[data-onb]').forEach(b=>b.onclick=()=>{if(b.dataset.onb==='next'&&(S.step||0)<2){S.step=(S.step||0)+1}else{S.modal=null;S.step=0;S.onb=true;save()}render()});
+ on('#ob','click',()=>{S.step=0;S.modal='onb';render()});
+ const ta=$('#ta');if(ta){const sb=$('#snd');const upd=()=>{ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';const n=Array.from(ta.value).length;sb.disabled=!ta.value.trim()||n>4000||S.busy;$('#cc').textContent=n>3500?n+'/4000':''};ta.addEventListener('input',upd);ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();if(!sb.disabled)send(ta.value)}});sb.onclick=()=>send(ta.value);if(S.pending){const p=S.pending;S.pending=null;setTimeout(()=>send(p),50)}else if(!S.busy)ta.focus()}
+ on('#sn','change',e=>{const v=e.target.value.trim();if(v.length>=2){S.user.name=v;save();toast('Saved')}else toast('Name must be at least 2 characters')});
+ on('#ul','change',e=>{S.lang=e.target.value;save();render()});on('#rl','change',e=>{S.reply=e.target.value;save();toast('Saved')});on('#th','change',e=>{S.theme=e.target.value;save();render()});
+}
+function authWire(f){
+ const reg=!!$('#nm');const v=id=>($('#'+id)||{}).value||'';const er=(id,m)=>{$('#e-'+id).textContent=m};
+ $('#sp').onchange=e=>{['pw','cp'].forEach(i=>{const x=$('#'+i);if(x)x.type=e.target.checked?'text':'password'})};
+ if(reg)$('#pw').oninput=()=>{const p=v('pw');const s=(p.length>=8)+(/[A-Za-z]/.test(p)&&/\d/.test(p))+(p.length>=12&&/[^A-Za-z0-9]/.test(p));$('#mt').style.width=(p?(s+ (p?0:0))*33+1:0)+'%';$('#mtx').textContent=p?['Weak','Fair','Good','Strong'][s]+' — strength is guidance only':'Use 8+ characters, a letter and a number.'};
+ $('#gg').onclick=()=>{const em='demo.google@example.com';let u=S.users.find(x=>x.email===em);if(!u){u={name:'Google Demo User',email:em,google:true};S.users.push(u)}login(u)};
+ f.onsubmit=e=>{e.preventDefault();['nm','em','pw','cp','f'].forEach(i=>$('#e-'+i)&&er(i,''));let ok=true;const em=v('em').trim().toLowerCase(),pw=v('pw');
+  if(reg){const n=Array.from(v('nm').trim()).length;if(n<2||n>60){er('nm','Enter your full name (2–60 characters).');ok=false}}
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){er('em','Enter a valid email address.');ok=false}
+  if(reg){if(pw.length<8||pw.length>72||!/[A-Za-z]/.test(pw)||!/\d/.test(pw)){er('pw','Password needs 8–72 characters, a letter and a number.');ok=false}if(pw!==v('cp')){er('cp','Passwords do not match.');ok=false}}else if(!pw){er('pw','Enter your password.');ok=false}
+  if(!ok)return;const b=$('#sb');b.disabled=true;b.textContent='Please wait…';
+  setTimeout(()=>{const ex=S.users.find(x=>x.email===em);
+   if(reg){if(ex){b.disabled=false;b.textContent='Create account';er('f',ex.google?'This email uses Google sign-in. Continue with Google.':'An account with this email already exists. Log in instead?');return}const u={name:v('nm').trim(),email:em,pw};S.users.push(u);login(u,true)}
+   else{if(!ex||ex.pw!==pw){b.disabled=false;b.textContent='Log in';er('f','Incorrect email or password');return}login(ex)}},500)};
+}
+function login(u,fresh){S.user=u;if(fresh||!S.onb){S.modal='onb';S.step=0}save();const q=decodeURIComponent((location.hash.split('redirect=')[1]||'')),ok=q.startsWith('/')&&!q.startsWith('//');go(ok?q:'/chat');toast(fresh?'Account created':'Signed in');render()}
+/* ===== Chat logic ===== */
+function send(text){
+ text=(text||'').trim();if(!text||S.busy||Array.from(text).length>4000)return;
+ const id=route().split('/')[2];let c=id&&S.convs.find(x=>x.id===id);
+ if(!c){c={id:'c'+Date.now(),title:title(text),msgs:[],updated:Date.now()};S.convs.push(c);history.replaceState(null,'','#/chat/'+c.id)}
+ c.msgs.push({role:'user',text,ts:Date.now()});c.updated=Date.now();S.err=null;save();ask(c,text)}
+function ask(c,text){S.busy=true;render();
+ setTimeout(()=>{S.busy=false;
+  if(/^\/fail/.test(text)&&!c.failed){c.failed=true;S.err='NeuroChat is temporarily unavailable (simulated 503). Your message was saved.';render();return}
+  c.msgs.push({role:'ai',text:aiReply(c,text),ts:Date.now(),sens:SENS.test(text)});c.updated=Date.now();save();render()},900+Math.random()*600)}
+function retry(){const c=S.convs.find(x=>x.id===route().split('/')[2]);if(!c)return;let i=c.msgs.length-1;if(c.msgs[i].role==='ai')c.msgs.pop();const lu=[...c.msgs].reverse().find(m=>m.role==='user');S.err=null;ask(c,lu.text)}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(S.modal){S.modal=null;render()}else if(S.drawer){S.drawer=false;render()}}});
+render();
+</script>
+</body>
+</html>

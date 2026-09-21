@@ -1,209 +1,227 @@
-import { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { useAuth } from './AuthContext';
-import api from '../services/api';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { conversationService } from '../services/conversationService.js';
+import { messageService } from '../services/messageService.js';
+import { useAuth } from './AuthContext.jsx';
+import { useDebounce } from '../hooks/useDebounce.js';
 
 const ChatContext = createContext(null);
 
-export const ChatProvider = ({ children }) => {
-  const { user } = useAuth();
-
+export function ChatProvider({ children }) {
+  const { isAuthenticated } = useAuth();
   const [conversations, setConversations] = useState([]);
-  const [activeConversation, setActiveConversation] = useState(null);
+  const [activeConversationId, setActiveConversationId] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [conversationsLoading, setConversationsLoading] = useState(false);
-  const [conversationsError, setConversationsError] = useState(null);
-  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [chatError, setChatError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [hasMoreMessages, setHasMoreMessages] = useState(false);
 
-  // Auto-clear all chat state when user logs out
-  useEffect(() => {
-    if (!user) {
-      setConversations([]);
-      setActiveConversation(null);
-      setMessages([]);
-      setLoading(false);
-      setConversationsLoading(false);
-      setConversationsError(null);
-      setMessagesLoading(false);
-    }
-  }, [user]);
+  const debouncedSearch = useDebounce(searchQuery, 300);
 
-  // Load all conversations for sidebar
+  // Load conversations list
   const loadConversations = useCallback(async () => {
-    setConversationsLoading(true);
-    setConversationsError(null);
+    if (!isAuthenticated) return;
     try {
-      const res = await api.get('/conversations');
-      setConversations(res.data.conversations);
-    } catch (error) {
-      console.error('Failed to load conversations:', error);
-      setConversationsError('Failed to load conversations');
-    } finally {
-      setConversationsLoading(false);
+      const res = await conversationService.list({ search: debouncedSearch });
+      setConversations(res.conversations || []);
+    } catch (err) {
+      console.error('Failed to load conversations:', err);
     }
-  }, []);
+  }, [isAuthenticated, debouncedSearch]);
 
-  // Create a new conversation
-  const createConversation = useCallback(async () => {
-    try {
-      const res = await api.post('/conversations');
-      const newConv = res.data.conversation;
-      setConversations((prev) => [newConv, ...prev]);
-      setActiveConversation(newConv);
-      setMessages([]);
-      return newConv;
-    } catch (error) {
-      console.error('Failed to create conversation:', error);
-      throw error;
-    }
-  }, []);
+  useEffect(() => {
+    loadConversations();
+  }, [loadConversations]);
 
-  // Select a conversation and load its messages
-  const selectConversation = useCallback(async (conversationId) => {
-    setMessagesLoading(true);
-    try {
-      const res = await api.get(`/conversations/${conversationId}`);
-      setActiveConversation(res.data.conversation);
-      setMessages(res.data.messages);
-    } catch (error) {
-      console.error('Failed to load conversation:', error);
-      // If conversation was deleted externally, remove from sidebar
-      if (error.response?.status === 404 || error.response?.status === 403) {
-        setConversations((prev) => prev.filter((c) => c._id !== conversationId));
+  // Load messages for an active conversation
+  const selectConversation = useCallback(
+    async (id) => {
+      setActiveConversationId(id);
+      setChatError(null);
+
+      if (!id) {
+        setMessages([]);
+        return;
       }
-    } finally {
-      setMessagesLoading(false);
-    }
-  }, []);
 
-  // Send a message and get AI response
-  // Accepts optional targetConversationId to avoid race condition
-  // when creating a new conversation and immediately sending a message
-  const sendMessage = useCallback(async (messageText, targetConversationId) => {
-    const convId = targetConversationId || activeConversation?._id;
-    if (!convId) return;
+      setIsLoadingHistory(true);
+      try {
+        const res = await messageService.list(id);
+        setMessages(res.messages || []);
+        setHasMoreMessages(res.hasMore || false);
+      } catch (err) {
+        setChatError(err.message || 'Failed to load conversation.');
+      } finally {
+        setIsLoadingHistory(false);
+      }
+    },
+    []
+  );
 
-    setLoading(true);
+  // Start a new chat (resets UI lazily per §11.3)
+  const startNewChat = () => {
+    setActiveConversationId(null);
+    setMessages([]);
+    setChatError(null);
+  };
 
-    // Optimistically add user message to the UI
-    const tempUserMsg = {
-      _id: 'temp-' + Date.now(),
+  // Send a message
+  const sendMessage = async (content = '', language, attachment, onConversationCreated) => {
+    const trimmedContent = (content || '').trim();
+    if ((!trimmedContent && !attachment) || isSending) return;
+
+    setChatError(null);
+    let convId = activeConversationId;
+
+    // Optimistic user message update
+    const optimisticUserMsg = {
+      id: 'temp_' + Date.now(),
       role: 'user',
-      content: messageText,
-      createdAt: new Date().toISOString()
+      content: trimmedContent,
+      attachment: attachment || null,
+      createdAt: new Date().toISOString(),
     };
-    setMessages((prev) => [...prev, tempUserMsg]);
+
+    setMessages((prev) => [...prev, optimisticUserMsg]);
+    setIsSending(true);
+
+    // Lazy creation of conversation if starting fresh (§11.3)
+    if (!convId) {
+      try {
+        const titleSource = trimmedContent || (attachment ? `Analysis of ${attachment.name}` : 'New chat');
+        const initialTitle = titleSource.length > 50
+          ? titleSource.slice(0, 50) + '…'
+          : titleSource;
+        const newConv = await conversationService.create(initialTitle);
+        convId = newConv.id;
+        setActiveConversationId(convId);
+        setConversations((prev) => [newConv, ...prev]);
+        if (typeof onConversationCreated === 'function') {
+          onConversationCreated(convId);
+        }
+      } catch (err) {
+        setChatError(err.message || 'Failed to initialize conversation.');
+        setIsSending(false);
+        return;
+      }
+    }
 
     try {
-      const res = await api.post(
-        `/conversations/${convId}/messages`,
-        { message: messageText }
-      );
+      const response = await messageService.send(convId, trimmedContent, language, attachment);
+      const { userMessage, assistantMessage, conversation: updatedConv } = response.data;
 
-      // Replace temp message with real one and add AI response
+      // Replace optimistic message and append assistant message
+      setMessages((prev) => [
+        ...prev.filter((m) => m.id !== optimisticUserMsg.id),
+        userMessage,
+        assistantMessage,
+      ]);
+
+      // Update conversations list title & timestamp
+      if (updatedConv) {
+        setConversations((prev) => {
+          const filtered = prev.filter((c) => c.id !== updatedConv.id);
+          return [updatedConv, ...filtered];
+        });
+      }
+    } catch (err) {
+      setChatError(err.message || "Couldn't reach NeuroChat. Please retry.");
+      // Keep optimistic message so the user can review and retry
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  // Retry last message (§11.3 & §23.4)
+  const retryLastMessage = async () => {
+    if (!activeConversationId || isSending) return;
+
+    setChatError(null);
+    setIsSending(true);
+
+    try {
+      const response = await messageService.retry(activeConversationId);
+      const { assistantMessage, conversation: updatedConv } = response;
+
       setMessages((prev) => {
-        const filtered = prev.filter((m) => m._id !== tempUserMsg._id);
-        return [...filtered, res.data.userMessage, res.data.aiMessage];
+        // If last message was assistant, replace it; if last was user, append new assistant reply
+        const last = prev[prev.length - 1];
+        if (last && last.role === 'assistant') {
+          return [...prev.slice(0, -1), assistantMessage];
+        }
+        return [...prev, assistantMessage];
       });
 
-      // Update conversation title in sidebar if it changed
-      if (res.data.conversationTitle) {
-        setConversations((prev) =>
-          prev.map((c) =>
-            c._id === convId
-              ? { ...c, title: res.data.conversationTitle, updatedAt: new Date().toISOString() }
-              : c
-          )
-        );
-        setActiveConversation((prev) => {
-          if (prev?._id === convId) {
-            return { ...prev, title: res.data.conversationTitle };
-          }
-          return prev;
+      if (updatedConv) {
+        setConversations((prev) => {
+          const filtered = prev.filter((c) => c.id !== updatedConv.id);
+          return [updatedConv, ...filtered];
         });
       }
-    } catch (error) {
-      console.error('Failed to send message:', error);
-
-      // If server returned the user message but Gemini failed, keep user message
-      if (error.response?.data?.userMessage) {
-        setMessages((prev) => {
-          const filtered = prev.filter((m) => m._id !== tempUserMsg._id);
-          return [...filtered, error.response.data.userMessage];
-        });
-      } else {
-        // Remove optimistic message on total failure
-        setMessages((prev) => prev.filter((m) => m._id !== tempUserMsg._id));
-      }
-
-      throw error;
+    } catch (err) {
+      setChatError(err.message || 'Retry failed. Please try again.');
     } finally {
-      setLoading(false);
+      setIsSending(false);
     }
-  }, [activeConversation]);
+  };
 
-  // Delete a conversation
-  const deleteConversation = useCallback(async (conversationId) => {
+  // Inline rename
+  const renameConversation = async (id, newTitle) => {
+    if (!newTitle.trim()) return;
     try {
-      await api.delete(`/conversations/${conversationId}`);
-
-      const isActive = activeConversation?._id === conversationId;
-
-      // Remove from sidebar
-      setConversations((prev) => prev.filter((c) => c._id !== conversationId));
-
-      // If we deleted the active conversation, auto-select the next one
-      if (isActive) {
-        const remaining = conversations.filter((c) => c._id !== conversationId);
-        if (remaining.length > 0) {
-          // Select the most recent remaining conversation
-          selectConversation(remaining[0]._id);
-        } else {
-          setActiveConversation(null);
-          setMessages([]);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to delete conversation:', error);
-      throw error;
+      const updated = await conversationService.rename(id, newTitle.trim());
+      setConversations((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, title: updated.title } : c))
+      );
+    } catch (err) {
+      alert(err.message || 'Failed to rename conversation');
     }
-  }, [activeConversation, conversations, selectConversation]);
+  };
 
-  // Clear chat state (used on logout)
-  const clearChat = useCallback(() => {
-    setConversations([]);
-    setActiveConversation(null);
-    setMessages([]);
-    setLoading(false);
-  }, []);
+  // Delete conversation
+  const deleteConversation = async (id) => {
+    try {
+      await conversationService.delete(id);
+      setConversations((prev) => prev.filter((c) => c.id !== id));
+      if (activeConversationId === id) {
+        startNewChat();
+      }
+    } catch (err) {
+      alert(err.message || 'Failed to delete conversation');
+    }
+  };
 
   return (
     <ChatContext.Provider
       value={{
         conversations,
-        activeConversation,
+        activeConversationId,
         messages,
-        loading,
-        conversationsLoading,
-        conversationsError,
-        messagesLoading,
-        loadConversations,
-        createConversation,
+        isLoadingHistory,
+        isSending,
+        chatError,
+        searchQuery,
+        hasMoreMessages,
+        setSearchQuery,
         selectConversation,
+        startNewChat,
         sendMessage,
+        retryLastMessage,
+        renameConversation,
         deleteConversation,
-        clearChat
+        refreshConversations: loadConversations,
       }}
     >
       {children}
     </ChatContext.Provider>
   );
-};
+}
 
-export const useChat = () => {
+export function useChat() {
   const context = useContext(ChatContext);
   if (!context) {
     throw new Error('useChat must be used within a ChatProvider');
   }
   return context;
-};
+}

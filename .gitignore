@@ -1,26 +1,42 @@
 # Dependencies
 node_modules/
+.pnp
+.pnp.js
 
-# Environment variables
+# Environment variables (strictly ignore all secrets across all folders)
 .env
-.env.local
-.env.*.local
+.env.*
+*.env
+**/.env
+**/.env.*
+**/.env.local
+**/.env.*.local
 
-# Build output
+# Keep example template files
+!.env.example
+!**/.env.example
+
+# Build outputs
 dist/
 build/
+*.tsbuildinfo
 
-# IDE / Editor
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Debug logs
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.log
+
+# Editor and OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Testing / Coverage
+coverage/
+.nyc_output/

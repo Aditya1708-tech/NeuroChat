@@ -1,37 +1,119 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, 'Name is required'],
-      trim: true
+      required: true,
+      trim: true,
+      minlength: 2,
+      maxlength: 60,
     },
     email: {
       type: String,
-      required: [true, 'Email is required'],
-      unique: true,
+      required: true,
+      trim: true,
       lowercase: true,
-      trim: true
+      unique: true,
+      index: true,
     },
-    password: {
+    passwordHash: {
       type: String,
-      required: [true, 'Password is required'],
-      minlength: [6, 'Password must be at least 6 characters']
-    }
+      select: false,
+    },
+    authProviders: {
+      type: [String],
+      enum: ['local', 'google'],
+      default: ['local'],
+    },
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    emailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    avatarUrl: {
+      type: String,
+      default: '',
+    },
+    settings: {
+      uiLanguage: {
+        type: String,
+        enum: ['en', 'hi'],
+        default: 'en',
+      },
+      replyLanguage: {
+        type: String,
+        enum: ['auto', 'en', 'hi'],
+        default: 'auto',
+      },
+      theme: {
+        type: String,
+        enum: ['light', 'dark', 'system'],
+        default: 'light',
+      },
+      onboardingCompleted: {
+        type: Boolean,
+        default: false,
+      },
+      memoryEnabled: {
+        type: Boolean,
+        default: true,
+      },
+    },
+    memories: [
+      {
+        id: {
+          type: String,
+          required: true,
+        },
+        text: {
+          type: String,
+          required: true,
+          trim: true,
+          maxlength: 500,
+        },
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+    tokenVersion: {
+      type: Number,
+      default: 0,
+    },
+    lastLoginAt: {
+      type: Date,
+    },
   },
   {
-    timestamps: true
+    timestamps: true,
+    toJSON: {
+      transform(doc, ret) {
+        ret.id = ret._id.toString();
+        delete ret._id;
+        delete ret.__v;
+        delete ret.passwordHash;
+        return ret;
+      },
+    },
   }
 );
 
-// Remove password from JSON responses
-userSchema.methods.toJSON = function () {
-  const user = this.toObject();
-  delete user.password;
-  return user;
-};
+const MongooseUser = mongoose.model('User', userSchema);
 
-const User = mongoose.model('User', userSchema);
+import { isDbConnected } from '../config/db.js';
+import { DevUser } from '../services/devStore.js';
 
-module.exports = User;
+export const User = new Proxy(MongooseUser, {
+  get(target, prop) {
+    if (!isDbConnected() && prop in DevUser) {
+      return DevUser[prop];
+    }
+    return target[prop];
+  },
+});

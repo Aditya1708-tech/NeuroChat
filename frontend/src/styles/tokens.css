@@ -1,0 +1,120 @@
+/* ===== Spec §14.5 Authoritative CSS Design Tokens ===== */
+:root {
+  /* Colour Palette */
+  --color-indigo-500: #6366f1;
+  --color-indigo-600: #4f46e5;
+  --color-violet-500: #8b5cf6;
+  --color-lavender-100: #ede9fe;
+
+  --bg-page: #f8fafc;
+  --bg-soft: #ede9fe;
+  --surface: #ffffff;
+  --surface-glass: rgba(255, 255, 255, 0.78);
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --text-muted: #6b7280;
+  --text-on-primary: #ffffff;
+
+  --border: #e5e7eb;
+  --border-strong: #d1d5db;
+
+  --success: #16a34a;
+  --warning: #b45309;
+  --error: #dc2626;
+  --info: #4f46e5;
+
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  --gradient-brand-soft: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+  --gradient-text: linear-gradient(135deg, #6366f1, #8b5cf6);
+  --gradient-glow: radial-gradient(
+    60% 60% at 50% 40%,
+    rgba(139, 92, 246, 0.24),
+    rgba(99, 102, 241, 0.14) 50%,
+    transparent 100%
+  );
+
+  /* Message Surfaces */
+  --msg-ai-bg: #ffffff;
+  --msg-ai-border: #e5e7eb;
+  --msg-ai-accent: var(--color-indigo-500);
+  --msg-user-bg: var(--gradient-primary);
+  --msg-user-text: #ffffff;
+
+  /* Border Radii */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.06);
+  --shadow-md: 0 4px 16px rgba(99, 102, 241, 0.08);
+  --shadow-lg: 0 12px 40px rgba(99, 102, 241, 0.14);
+
+  /* Glow Tokens */
+  --glow-intensity: 0.16;
+  --glow-sm: 0 0 0 1px rgba(99, 102, 241, 0.1),
+    0 4px 18px rgba(139, 92, 246, var(--glow-intensity));
+  --glow-md: 0 0 0 1px rgba(99, 102, 241, 0.16),
+    0 8px 30px rgba(99, 102, 241, 0.22);
+  --focus-ring: 0 0 0 3px #fff, 0 0 0 5px #6366f1;
+
+  /* Spacing Scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Typography */
+  --font-heading: 'Plus Jakarta Sans', 'Noto Sans Devanagari', system-ui, sans-serif;
+  --font-body: 'Inter', 'Noto Sans Devanagari', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+
+  /* Motion */
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur: 200ms;
+  --dur-slow: 360ms;
+
+  /* Layout */
+  --sidebar-width: 280px;
+  --content-max: 760px;
+  --touch-min: 44px;
+}
+
+/* Dark Theme overrides (§14.11) */
+[data-theme='dark'] {
+  --bg-page: #0f1020;
+  --bg-soft: #1b1a3a;
+  --surface: #161730;
+  --surface-glass: rgba(22, 23, 48, 0.82);
+  --text-primary: #f3f4f6;
+  --text-secondary: #c7c9d9;
+  --text-muted: #9ca3af;
+  --border: #2a2b4a;
+  --border-strong: #3b3d63;
+  --gradient-brand-soft: linear-gradient(135deg, #1b1a3a, #241d4a);
+  --glow-intensity: 0.28;
+  --focus-ring: 0 0 0 3px #0f1020, 0 0 0 5px #a5b4fc;
+  --msg-ai-bg: #161730;
+  --msg-ai-border: #2a2b4a;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur: 0ms;
+    --dur-slow: 0ms;
+  }
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
