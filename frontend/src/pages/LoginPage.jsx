@@ -88,6 +88,10 @@ export function LoginPage() {
       if (err.code === 'auth/popup-closed-by-user') {
         return;
       }
+      if (err.code === 'auth/network-request-failed' || err.code === 'auth/unauthorized-domain') {
+        setFormError('Google popup was interrupted. Please make sure popups/third-party cookies are allowed for localhost, or try again.');
+        return;
+      }
       setFormError(err.message || 'Google authentication failed.');
     } finally {
       setIsSubmitting(false);

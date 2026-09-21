@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
 import { CodeBlock } from './CodeBlock.jsx';
+import { MermaidBlock } from './MermaidBlock.jsx';
 
 // Sanitization schema per spec §26.4: allow safe text elements, disable image tags
 const sanitizeSchema = {
@@ -47,6 +48,12 @@ export function MarkdownRenderer({ content }) {
           code({ node, inline, className, children, ...props }) {
             const match = /language-(\w+)/.exec(className || '');
             const codeString = String(children).replace(/\n$/, '');
+            const lang = (match ? match[1] : '').toLowerCase();
+            const isMermaidSyntax = /^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|journey|gantt|pie|gitGraph)\b/i.test(codeString.trim());
+
+            if (!inline && (lang === 'mermaid' || (!lang && isMermaidSyntax))) {
+              return <MermaidBlock value={codeString} />;
+            }
 
             if (!inline && match) {
               return <CodeBlock language={match[1]} value={codeString} />;

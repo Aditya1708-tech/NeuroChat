@@ -3,10 +3,11 @@ import { buildConversationContext } from '../../services/context.service.js';
 import { isSensitiveTopic } from '../../utils/sensitiveTopics.js';
 
 console.log('Testing Title Generation...');
-const title1 = generateConversationTitle('What is Java?\nAnd how does it work?');
-console.assert(title1 === 'What is Java? And how does it work?', 'Title 1 mismatch');
+const title1 = await generateConversationTitle('What is Java?\nAnd how does it work?');
+console.log('Title 1:', title1);
+console.assert(title1.includes('Java'), 'Title 1 mismatch');
 
-const hindiTitle = generateConversationTitle('नमस्ते, मुझे जावा प्रोग्रामिंग और ऑब्जेक्ट ओरिएंटेड कॉन्सेप्ट्स के बारे में विस्तार से समझाइए');
+const hindiTitle = await generateConversationTitle('नमस्ते, मुझे जावा प्रोग्रामिंग और ऑब्जेक्ट ओरिएंटेड कॉन्सेप्ट्स के बारे में विस्तार से समझाइए');
 console.log('Hindi title:', hindiTitle);
 console.assert(Array.from(hindiTitle).length <= 61, 'Hindi title length violation');
 

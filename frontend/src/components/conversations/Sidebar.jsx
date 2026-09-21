@@ -20,6 +20,21 @@ import { useTheme } from '../../context/ThemeContext.jsx';
 import { Modal } from '../ui/Modal.jsx';
 import { Button } from '../ui/Button.jsx';
 
+function formatRelativeTime(dateInput) {
+  if (!dateInput) return '';
+  const date = new Date(dateInput);
+  const now = new Date();
+  const diffSec = Math.floor((now - date) / 1000);
+
+  if (diffSec < 60) return 'Just now';
+  if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+  if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
+  if (diffSec < 172800) return 'Yesterday';
+  if (diffSec < 604800) return `${Math.floor(diffSec / 86400)}d ago`;
+
+  return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+}
+
 export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse }) {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
@@ -248,19 +263,26 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse
                       color={isActive ? 'var(--color-indigo-500)' : 'var(--text-secondary)'}
                       style={{ flexShrink: 0 }}
                     />
-                    <span
-                      style={{
-                        fontSize: '0.9rem',
-                        fontWeight: isActive ? 600 : 400,
-                        color: isActive ? 'var(--color-indigo-600)' : 'var(--text-primary)',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                      title={conv.title}
-                    >
-                      {conv.title}
-                    </span>
+                    <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
+                      <span
+                        style={{
+                          fontSize: '0.88rem',
+                          fontWeight: isActive ? 600 : 400,
+                          color: isActive ? 'var(--color-indigo-600)' : 'var(--text-primary)',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                        title={conv.title}
+                      >
+                        {conv.title}
+                      </span>
+                      {conv.updatedAt && (
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', lineHeight: 1.2 }}>
+                          {formatRelativeTime(conv.updatedAt)}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="conv-actions" style={{ display: 'flex', gap: '2px' }}>
