@@ -13,6 +13,7 @@ export const sendMessageSchema = z
       .max(4000, 'Message cannot exceed 4,000 characters.')
       .default(''),
     language: z.enum(['en', 'hi', 'auto']).nullish().or(z.literal('')),
+    model: z.enum(['gemini', 'nemotron']).optional().default('gemini'),
     attachment: z
       .object({
         type: z.enum(['image', 'file']),

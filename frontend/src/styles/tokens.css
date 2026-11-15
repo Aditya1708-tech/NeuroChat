@@ -86,6 +86,7 @@
   --sidebar-width: 280px;
   --content-max: 760px;
   --touch-min: 44px;
+  --chat-font-size: 0.9125rem;
 }
 
 /* Dark Theme overrides (§14.11) */

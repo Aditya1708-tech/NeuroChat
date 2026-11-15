@@ -5,6 +5,7 @@ import { isDbConnected } from '../config/db.js';
 const users = new Map();
 const conversations = new Map();
 const messages = new Map();
+const artifacts = new Map();
 
 function generateObjectId() {
   const timestamp = Math.floor(Date.now() / 1000).toString(16).padStart(8, '0');
@@ -397,3 +398,81 @@ export const DevMessage = {
     return { deletedCount };
   },
 };
+
+// ---------------- Artifact Store ----------------
+class DevArtifactInstance {
+  constructor(data) {
+    this._id = data._id || generateObjectId();
+    this.id = this._id.toString();
+    this.userId = data.userId ? data.userId.toString() : '';
+    this.conversationId = data.conversationId ? data.conversationId.toString() : '';
+    this.messageId = data.messageId ? data.messageId.toString() : undefined;
+    this.title = data.title || 'Untitled Artifact';
+    this.filename = data.filename || 'document.txt';
+    this.type = data.type || 'code';
+    this.format = data.format || 'text';
+    this.mimeType = data.mimeType || 'text/plain';
+    this.content = data.content || '';
+    this.originalFileName = data.originalFileName;
+    this.originalFormat = data.originalFormat;
+    this.size = data.size || (this.content ? Buffer.byteLength(this.content, 'utf8') : 0);
+    this.version = data.version || 1;
+    this.createdAt = data.createdAt || new Date();
+    this.updatedAt = data.updatedAt || new Date();
+  }
+
+  toJSON() {
+    return {
+      id: this._id.toString(),
+      userId: this.userId,
+      conversationId: this.conversationId,
+      messageId: this.messageId,
+      title: this.title,
+      filename: this.filename,
+      type: this.type,
+      format: this.format,
+      mimeType: this.mimeType,
+      content: this.content,
+      originalFileName: this.originalFileName,
+      originalFormat: this.originalFormat,
+      size: this.size,
+      version: this.version,
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
+    };
+  }
+}
+
+export const DevArtifact = {
+  async create(data) {
+    const instance = new DevArtifactInstance(data);
+    artifacts.set(instance._id.toString(), instance);
+    return instance;
+  },
+
+  async findById(id) {
+    return artifacts.get(id ? id.toString() : '') || null;
+  },
+
+  async findByIdAndUpdate(id, update = {}) {
+    const art = artifacts.get(id ? id.toString() : '');
+    if (!art) return null;
+    const doc = update.$set ? { ...update.$set } : { ...update };
+    if (update.$inc && update.$inc.version) {
+      art.version = (art.version || 1) + update.$inc.version;
+    }
+    Object.assign(art, doc);
+    art.updatedAt = new Date();
+    artifacts.set(art._id.toString(), art);
+    return art;
+  },
+
+  async deleteOne(query = {}) {
+    if (query._id) {
+      const deleted = artifacts.delete(query._id.toString());
+      return { deletedCount: deleted ? 1 : 0 };
+    }
+    return { deletedCount: 0 };
+  },
+};
+

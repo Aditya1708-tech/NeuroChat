@@ -38,6 +38,15 @@ export function SettingsPage() {
   const [selectedTheme, setSelectedTheme] = useState(user?.settings?.theme || theme || 'light');
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [chatFontSize, setChatFontSize] = useState(
+    localStorage.getItem('nc_chat_font_size') || '0.9125rem'
+  );
+
+  const handleFontSizeChange = (val) => {
+    setChatFontSize(val);
+    localStorage.setItem('nc_chat_font_size', val);
+    document.documentElement.style.setProperty('--chat-font-size', val);
+  };
 
   // ChatGPT-style Memory State
   const [memories, setMemories] = useState([]);
@@ -384,6 +393,35 @@ export function SettingsPage() {
                   <option value="light">{t('settings.themeLight')}</option>
                   <option value="dark">{t('settings.themeDark')}</option>
                   <option value="system">{t('settings.themeSystem')}</option>
+                </select>
+              </div>
+
+              <div style={{ marginTop: '16px' }}>
+                <label
+                  htmlFor="pref-font-size"
+                  style={{ display: 'block', fontWeight: 600, fontSize: '0.9rem', marginBottom: '6px' }}
+                >
+                  Chat Font Size
+                </label>
+                <select
+                  id="pref-font-size"
+                  value={chatFontSize}
+                  onChange={(e) => handleFontSizeChange(e.target.value)}
+                  style={{
+                    width: '100%',
+                    minHeight: '44px',
+                    padding: '0 12px',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid var(--border-strong)',
+                    background: 'var(--surface)',
+                    color: 'var(--text-primary)',
+                    outline: 'none',
+                  }}
+                >
+                  <option value="0.875rem">Compact (14px - Claude style)</option>
+                  <option value="0.9125rem">Normal (14.6px - Balanced)</option>
+                  <option value="0.95rem">Medium (15.2px - ChatGPT style)</option>
+                  <option value="1rem">Large (16px)</option>
                 </select>
               </div>
             </div>

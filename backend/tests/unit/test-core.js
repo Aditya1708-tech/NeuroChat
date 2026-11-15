@@ -24,7 +24,7 @@ const history = [
   { role: 'assistant', content: 'Java is an OOP language.' },
 ];
 const nextMsg = { role: 'user', content: 'What are its advantages?' };
-const context = buildConversationContext(history, nextMsg);
+const context = await buildConversationContext(history, nextMsg);
 
 console.assert(context.contents.length === 5, 'Context length mismatch');
 console.assert(context.contents[0].role === 'user', 'First turn must be user');

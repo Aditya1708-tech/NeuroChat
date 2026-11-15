@@ -1,14 +1,16 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { env } from '../config/env.js';
+import { env, getGeminiApiKeys } from '../config/env.js';
 import { logger } from '../utils/logger.js';
 
-let titleAI = null;
+let titlePool = [];
 
 function getTitleClient() {
-  if (!titleAI && env.GEMINI_API_KEY && !env.GEMINI_API_KEY.includes('placeholder')) {
-    titleAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
+  const keys = getGeminiApiKeys();
+  if (keys.length === 0) return null;
+  if (titlePool.length !== keys.length) {
+    titlePool = keys.map((key) => new GoogleGenerativeAI(key));
   }
-  return titleAI;
+  return titlePool[Math.floor(Math.random() * titlePool.length)];
 }
 
 /**
@@ -21,12 +23,50 @@ function getTitleClient() {
 export async function generateConversationTitle(text) {
   if (!text || typeof text !== 'string') return 'New chat';
 
+  // 1. Try NVIDIA Nemotron-3 Ultra first for instant intelligent titles
+  const nvidiaKey = process.env.NVIDIA_API_KEY;
+  if (nvidiaKey && nvidiaKey.startsWith('nvapi-')) {
+    try {
+      const res = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${nvidiaKey}`,
+        },
+        body: JSON.stringify({
+          model: 'nvidia/nemotron-3-ultra-550b-a55b',
+          messages: [
+            {
+              role: 'system',
+              content:
+                'Summarize the core topic of the user message into a short, clear title of 2 to 5 words maximum for a chat sidebar. Do not use quotes, punctuation, prefixes, or filler words. Return ONLY the title.',
+            },
+            { role: 'user', content: text.slice(0, 300) },
+          ],
+          temperature: 0.3,
+          max_tokens: 150,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        let title = data.choices?.[0]?.message?.content || '';
+        title = title.replace(/["'*`_#.\n\r]+/g, ' ').replace(/\s+/g, ' ').trim();
+        if (title.length > 0 && title.length <= 60) {
+          return title;
+        }
+      }
+    } catch (nvErr) {
+      logger.warn('Nemotron title generation failed, falling back to Gemini:', { error: nvErr?.message });
+    }
+  }
+
   const client = getTitleClient();
   if (client) {
     try {
       const model = client.getGenerativeModel(
-        { model: env.GEMINI_MODEL || 'gemini-3.6-flash' },
-        { timeout: 8000 }
+        { model: env.GEMINI_MODEL || 'gemini-3.5-flash-lite' },
+        { timeout: 15000 }
       );
       const prompt = `Summarize the core topic of this user message into a short, clear title of 2 to 5 words maximum for a chat sidebar. Do not use quotes, punctuation, prefixes, or conversational filler words. Return ONLY the title.\n\nUser message: ${text.slice(0, 300)}`;
 
@@ -59,6 +99,5 @@ export function fallbackTitle(text) {
   if (chars.length > 35) {
     return chars.slice(0, 35).join('').trim() + '…';
   }
-
-  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  return cleaned;
 }

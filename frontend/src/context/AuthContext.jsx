@@ -10,9 +10,14 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     async function checkSession() {
       try {
-        const currentUser = await authService.getMe();
-        setUser(currentUser);
-        setStatus('authenticated');
+        const currentUser = await authService.getMe({ timeoutMs: 3000 });
+        if (currentUser) {
+          setUser(currentUser);
+          setStatus('authenticated');
+        } else {
+          setUser(null);
+          setStatus('anonymous');
+        }
       } catch (err) {
         setUser(null);
         setStatus('anonymous');

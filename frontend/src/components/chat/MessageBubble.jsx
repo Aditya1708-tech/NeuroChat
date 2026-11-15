@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Copy, Check, RotateCw, Volume2, VolumeX, AlertTriangle, Info } from 'lucide-react';
 import { MarkdownRenderer } from './MarkdownRenderer.jsx';
+import { ArtifactCard } from './ArtifactCard.jsx';
+import { GeneratedImageCard } from './GeneratedImageCard.jsx';
 import { useSpeechSynthesis } from '../../hooks/useSpeechSynthesis.js';
 
 export function MessageBubble({ message, isLast = false, onRetry }) {
@@ -141,6 +143,79 @@ export function MessageBubble({ message, isLast = false, onRetry }) {
     );
   }
 
+  // Extract and resolve artifacts for assistant message
+  const metadataArtifacts = message.metadata?.artifacts || [];
+  let displayContent = (message.content || '')
+    .replace(/^>\s*📄\s*\*\*Artifact Generated\*\*:[^\n]*/gim, '')
+    .trim();
+  const parsedArtifacts = [...metadataArtifacts];
+
+  if (displayContent.includes('<neuro_artifact')) {
+    const artifactRegex = /<neuro_artifact\s+([^>]*?)>([\s\S]*?)<\/neuro_artifact>/gi;
+    displayContent = displayContent
+      .replace(artifactRegex, (match, attrs, body) => {
+        const getAttr = (name) => {
+          const m = new RegExp(`${name}=["']([^"']+)["']`, 'i').exec(attrs);
+          return m ? m[1] : '';
+        };
+        const title = getAttr('title') || 'Generated Artifact';
+        const filename = getAttr('filename') || 'document.txt';
+        const type = getAttr('type') || 'code';
+        const format = getAttr('format') || 'text';
+
+        if (!parsedArtifacts.some((a) => a.filename === filename)) {
+          const safeBody = (body || '').trim();
+          parsedArtifacts.push({
+            title,
+            filename,
+            type,
+            format,
+            content: safeBody,
+            size: safeBody.length,
+          });
+        }
+        return '';
+      })
+      .trim();
+
+    // Also handle unclosed <neuro_artifact> (e.g. when stream is cut off before closing tag)
+    if (displayContent.includes('<neuro_artifact')) {
+      const unclosedRegex = /<neuro_artifact\s+([^>]*?)>([\s\S]*)$/i;
+      displayContent = displayContent
+        .replace(unclosedRegex, (match, attrs, body) => {
+          const getAttr = (name) => {
+            const m = new RegExp(`${name}=["']([^"']+)["']`, 'i').exec(attrs);
+            return m ? m[1] : '';
+          };
+          const title = getAttr('title') || 'Generated Artifact';
+          const filename = getAttr('filename') || 'document.txt';
+          const type = getAttr('type') || 'code';
+          const format = getAttr('format') || 'text';
+
+          if (!parsedArtifacts.some((a) => a.filename === filename)) {
+            const safeBody = (body || '').trim();
+            parsedArtifacts.push({
+              title,
+              filename,
+              type,
+              format,
+              content: safeBody,
+              size: safeBody.length,
+            });
+          }
+          return '';
+        })
+        .trim();
+    }
+  }
+
+  // Strip legacy residual artifact announcements if artifacts are present
+  if (parsedArtifacts.length > 0) {
+    displayContent = displayContent
+      .replace(/(?:>\s*)?(?:📄\s*)?\*\*Artifact Generated\*\*:[^\n]*(?:\n*```[\s\S]*?```|\n*`[^\n`]+`|\s*\([^)]+\))?/gi, '')
+      .trim();
+  }
+
   // Assistant Bubble
   return (
     <div
@@ -202,7 +277,21 @@ export function MessageBubble({ message, isLast = false, onRetry }) {
         </div>
 
         {/* Message Content */}
-        <MarkdownRenderer content={message.content} />
+        {displayContent && <MarkdownRenderer content={displayContent} />}
+
+        {/* Rendered AI Generated or Enhanced Image (ChatGPT-style) */}
+        {message.metadata?.image && (
+          <GeneratedImageCard image={message.metadata.image} />
+        )}
+
+        {/* Rendered Artifact Cards (Claude-style) */}
+        {parsedArtifacts.length > 0 && (
+          <div style={{ marginTop: '12px' }}>
+            {parsedArtifacts.map((art, idx) => (
+              <ArtifactCard key={art.id || art.identifier || idx} artifact={art} />
+            ))}
+          </div>
+        )}
 
         {/* Sensitive Topic Verification Note (AI-005) */}
         {message.metadata?.sensitiveTopic && (

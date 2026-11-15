@@ -37,11 +37,7 @@ export function ProtectedRoute({ children }) {
 }
 
 export function PublicOnlyRoute({ children }) {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return null;
-  }
+  const { isAuthenticated } = useAuth();
 
   if (isAuthenticated) {
     return <Navigate to="/chat" replace />;

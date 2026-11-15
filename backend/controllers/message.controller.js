@@ -16,8 +16,8 @@ export async function list(req, res) {
 }
 
 export async function send(req, res) {
-  const { content, language, attachment } = req.body;
-  const result = await sendMessage(req.user.id, req.params.id, { content, language, attachment });
+  const { content, language, attachment, model } = req.body;
+  const result = await sendMessage(req.user.id, req.params.id, { content, language, attachment, model });
 
   res.status(201).json({
     success: true,
@@ -31,7 +31,8 @@ export async function send(req, res) {
 }
 
 export async function retry(req, res) {
-  const result = await retryMessage(req.user.id, req.params.id);
+  const { model } = req.body || {};
+  const result = await retryMessage(req.user.id, req.params.id, { model });
 
   res.status(200).json({
     success: true,

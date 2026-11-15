@@ -8,8 +8,8 @@ import { PasswordField } from '../components/ui/PasswordField.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { ThemeToggle } from '../components/ui/ThemeToggle.jsx';
 
-import { auth, googleProvider, isFirebaseConfigured } from '../config/firebase.js';
-import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+
+
 
 export function LoginPage() {
   const { t } = useTranslation();
@@ -58,6 +58,8 @@ export function LoginPage() {
     setFormError('');
     setIsSubmitting(true);
     try {
+      const { auth, googleProvider, isFirebaseConfigured } = await import('../config/firebase.js');
+
       if (!isFirebaseConfigured) {
         // Safe dev fallback if Firebase config is not yet added to .env
         await googleLogin('mock_google_credential_dev_token', rememberMe);
@@ -65,6 +67,7 @@ export function LoginPage() {
         return;
       }
 
+      const { signInWithPopup, GoogleAuthProvider } = await import('firebase/auth');
       const result = await signInWithPopup(auth, googleProvider);
       const credential = GoogleAuthProvider.credentialFromResult(result);
       const idToken = credential?.idToken || (await result.user.getIdToken());

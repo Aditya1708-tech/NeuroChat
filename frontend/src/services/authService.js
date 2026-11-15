@@ -31,10 +31,11 @@ export const authService = {
     });
   },
 
-  async getMe() {
+  async getMe(options = {}) {
     const res = await apiFetch('/auth/me', {
       method: 'GET',
+      ...options,
     });
-    return res.data.user;
+    return res?.data?.user;
   },
 };

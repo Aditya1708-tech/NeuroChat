@@ -153,6 +153,21 @@ export function Composer({ onSend, isSending, disabled = false }) {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
+      {/* Centered Disclaimer Notice (ChatGPT style, positioned above input box) */}
+      <div
+        style={{
+          textAlign: 'center',
+          fontSize: '0.76rem',
+          color: 'var(--text-muted)',
+          marginBottom: '8px',
+          fontWeight: 400,
+          letterSpacing: '0.01em',
+          userSelect: 'none',
+        }}
+      >
+        {t('chat.disclaimer')}
+      </div>
+
       <div
         className="glass-panel"
         style={{
@@ -173,7 +188,7 @@ export function Composer({ onSend, isSending, disabled = false }) {
           type="file"
           ref={fileInputRef}
           onChange={handleFileChange}
-          accept="image/*,application/pdf,text/*,.csv,.md,.json"
+          accept="image/*,application/pdf,text/*,.csv,.md,.json,.js,.jsx,.ts,.tsx,.py,.html,.css,.xml,.yaml,.yml,.sql,.java,.c,.cpp"
           style={{ display: 'none' }}
         />
 
@@ -257,6 +272,38 @@ export function Composer({ onSend, isSending, disabled = false }) {
             >
               <X size={16} />
             </button>
+          </div>
+        )}
+
+        {attachment && (
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '8px' }}>
+            {[
+              'Edit and optimize this file',
+              'Find and fix bugs',
+              'Convert format to JSON',
+              'Convert format to Markdown',
+              'Add comprehensive documentation',
+            ].map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setContent(s)}
+                style={{
+                  border: '1px solid var(--border)',
+                  background: 'var(--bg-soft)',
+                  color: 'var(--text-secondary)',
+                  borderRadius: 'var(--radius-pill)',
+                  padding: '2px 8px',
+                  fontSize: '0.72rem',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
+                <span>✨ {s}</span>
+              </button>
+            ))}
           </div>
         )}
 
@@ -362,18 +409,6 @@ export function Composer({ onSend, isSending, disabled = false }) {
             <Send size={18} />
           </button>
         </div>
-      </div>
-
-      {/* Persistent Disclaimer */}
-      <div
-        style={{
-          textAlign: 'center',
-          fontSize: '0.78rem',
-          color: 'var(--text-muted)',
-          marginTop: '8px',
-        }}
-      >
-        {t('chat.disclaimer')}
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { conversationService } from '../services/conversationService.js';
 import { messageService } from '../services/messageService.js';
+import { artifactService } from '../services/artifactService.js';
 import { useAuth } from './AuthContext.jsx';
 import { useDebounce } from '../hooks/useDebounce.js';
 
@@ -16,6 +17,20 @@ export function ChatProvider({ children }) {
   const [chatError, setChatError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [hasMoreMessages, setHasMoreMessages] = useState(false);
+  const [activeArtifact, setActiveArtifact] = useState(null);
+  const [libraryModalOpen, setLibraryModalOpen] = useState(false);
+  const [imageStudioOpen, setImageStudioOpen] = useState(false);
+
+  // Chat Model Selector: 'gemini' (Default) vs 'nemotron'
+  const [selectedModel, setSelectedModelState] = useState(() => {
+    return localStorage.getItem('neurochat:selected-model') || 'gemini';
+  });
+
+  const setSelectedModel = useCallback((model) => {
+    const validModel = model === 'nemotron' ? 'nemotron' : 'gemini';
+    setSelectedModelState(validModel);
+    localStorage.setItem('neurochat:selected-model', validModel);
+  }, []);
 
   const debouncedSearch = useDebounce(searchQuery, 300);
 
@@ -39,6 +54,7 @@ export function ChatProvider({ children }) {
     async (id) => {
       setActiveConversationId(id);
       setChatError(null);
+      setActiveArtifact(null);
 
       if (!id) {
         setMessages([]);
@@ -60,6 +76,21 @@ export function ChatProvider({ children }) {
   );
 
   // Start a new chat (resets UI lazily per §11.3)
+  const openArtifact = async (artifact) => {
+    if (!artifact) return;
+    if (!artifact.content && (artifact.id || artifact._id)) {
+      try {
+        const full = await artifactService.get(artifact.id || artifact._id);
+        setActiveArtifact(full || artifact);
+        return;
+      } catch (e) {
+        console.warn('Failed to load full artifact:', e);
+      }
+    }
+    setActiveArtifact(artifact);
+  };
+  const closeArtifact = () => setActiveArtifact(null);
+
   const startNewChat = () => {
     setActiveConversationId(null);
     setMessages([]);
@@ -108,7 +139,7 @@ export function ChatProvider({ children }) {
     }
 
     try {
-      const response = await messageService.send(convId, trimmedContent, language, attachment);
+      const response = await messageService.send(convId, trimmedContent, language, attachment, selectedModel);
       const { userMessage, assistantMessage, conversation: updatedConv } = response.data;
 
       // Replace optimistic message and append assistant message
@@ -117,6 +148,9 @@ export function ChatProvider({ children }) {
         userMessage,
         assistantMessage,
       ]);
+      if (assistantMessage?.metadata?.artifacts?.length > 0) {
+        setActiveArtifact(assistantMessage.metadata.artifacts[0]);
+      }
 
       // Update conversations list title & timestamp
       if (updatedConv) {
@@ -141,7 +175,7 @@ export function ChatProvider({ children }) {
     setIsSending(true);
 
     try {
-      const response = await messageService.retry(activeConversationId);
+      const response = await messageService.retry(activeConversationId, selectedModel);
       const { assistantMessage, conversation: updatedConv } = response;
 
       setMessages((prev) => {
@@ -211,6 +245,16 @@ export function ChatProvider({ children }) {
         renameConversation,
         deleteConversation,
         refreshConversations: loadConversations,
+        activeArtifact,
+        setActiveArtifact,
+        openArtifact,
+        closeArtifact,
+        libraryModalOpen,
+        setLibraryModalOpen,
+        imageStudioOpen,
+        setImageStudioOpen,
+        selectedModel,
+        setSelectedModel,
       }}
     >
       {children}

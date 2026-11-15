@@ -1,13 +1,15 @@
 import { aiConfig } from '../config/ai.js';
+import { isTextOrCodeFile, getExtension } from '../utils/artifactParser.js';
+import { extractPdfContent } from '../utils/pdfExtractor.js';
 
 /**
  * Builds the bounded conversation context window for Gemini per §19.3.
  *
  * @param {Array} history - Chronological array of previous messages ({ role, content })
  * @param {Object} newUserMessage - The newly added user message ({ role: 'user', content: string })
- * @returns {{ contents: Array, truncated: boolean }}
+ * @returns {Promise<{ contents: Array, truncated: boolean }>}
  */
-export function buildConversationContext(history = [], newUserMessage) {
+export async function buildConversationContext(history = [], newUserMessage) {
   const candidates = [...history, newUserMessage];
   const selected = [];
   let totalChars = 0;
@@ -60,34 +62,73 @@ export function buildConversationContext(history = [], newUserMessage) {
   }
 
   // Step 7: Map roles for Gemini API (user -> "user", assistant -> "model")
-  const contents = merged.map((m) => {
-    const parts = [];
+  const contents = await Promise.all(
+    merged.map(async (m) => {
+      const parts = [];
 
-    // If message includes an attachment, format it as inlineData
-    if (m.attachment && m.attachment.dataUrl) {
-      const commaIdx = m.attachment.dataUrl.indexOf(',');
-      const base64Data = commaIdx !== -1 ? m.attachment.dataUrl.slice(commaIdx + 1) : m.attachment.dataUrl;
-      const mimeType = m.attachment.mimeType || 'image/jpeg';
-      parts.push({
-        inlineData: {
-          mimeType,
-          data: base64Data,
-        },
-      });
-    }
+      // If message includes an attachment, format it appropriately
+      if (m.attachment && m.attachment.dataUrl) {
+        const commaIdx = m.attachment.dataUrl.indexOf(',');
+        const base64Data = commaIdx !== -1 ? m.attachment.dataUrl.slice(commaIdx + 1) : m.attachment.dataUrl;
+        const mimeType = m.attachment.mimeType || 'application/octet-stream';
+        const fileName = m.attachment.name || 'document.txt';
 
-    if (m.content && m.content.trim()) {
-      parts.push({ text: m.content.trim() });
-    } else if (parts.length > 0) {
-      // Default prompt if user only sent an attachment without text
-      parts.push({ text: 'Please analyze this file or image and describe its key information in detail.' });
-    }
+        if (isTextOrCodeFile(fileName, mimeType)) {
+          try {
+            const decodedText = Buffer.from(base64Data, 'base64').toString('utf8');
+            const ext = getExtension(fileName) || 'text';
+            parts.push({
+              text: `\n\n--- ATTACHED FILE: ${fileName} (${mimeType}) ---\n\`\`\`${ext}\n${decodedText}\n\`\`\`\n--- END OF ATTACHED FILE ---\n`,
+            });
+          } catch {
+            parts.push({
+              inlineData: {
+                mimeType,
+                data: base64Data,
+              },
+            });
+          }
+        } else if (mimeType === 'application/pdf' || fileName.toLowerCase().endsWith('.pdf')) {
+          try {
+            const pdfData = await extractPdfContent(base64Data, { fileName });
+            if (pdfData.success && pdfData.text) {
+              parts.push({
+                text: `\n\n--- ATTACHED PDF DOCUMENT: ${fileName} (Total Pages: ${pdfData.pageCount}) ---\n[The user has attached a ${pdfData.pageCount}-page PDF document. Below is the full extracted text from all ${pdfData.pageCount} pages]:\n\n${pdfData.text}\n\n--- END OF ATTACHED PDF DOCUMENT ---\n`,
+              });
+            }
+          } catch {
+            // Fall back to inlineData if parsing fails
+          }
+          // Also provide inlineData so Gemini can inspect layout and imagery
+          parts.push({
+            inlineData: {
+              mimeType: 'application/pdf',
+              data: base64Data,
+            },
+          });
+        } else {
+          parts.push({
+            inlineData: {
+              mimeType,
+              data: base64Data,
+            },
+          });
+        }
+      }
 
-    return {
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts,
-    };
-  });
+      if (m.content && m.content.trim()) {
+        parts.push({ text: m.content.trim() });
+      } else if (parts.length > 0) {
+        // Default prompt if user only sent an attachment without text
+        parts.push({ text: 'Please analyze this file or document in detail.' });
+      }
+
+      return {
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts,
+      };
+    })
+  );
 
   // Step 8: Set truncated flag
   const truncated = hitBudgetLimit || candidates.length > selected.length;

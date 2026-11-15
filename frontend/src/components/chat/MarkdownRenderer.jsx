@@ -40,7 +40,14 @@ const sanitizeSchema = {
 
 export function MarkdownRenderer({ content }) {
   return (
-    <div className="markdown-content" style={{ fontSize: '1rem', lineHeight: '1.65' }}>
+    <div
+      className="markdown-content"
+      style={{
+        fontSize: 'var(--chat-font-size, 0.9125rem)',
+        lineHeight: '1.65',
+        color: 'var(--text-primary)',
+      }}
+    >
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[[rehypeSanitize, sanitizeSchema]]}
@@ -67,9 +74,9 @@ export function MarkdownRenderer({ content }) {
               <code
                 style={{
                   fontFamily: 'var(--font-mono)',
-                  fontSize: '0.875rem',
+                  fontSize: '0.82rem',
                   backgroundColor: 'var(--bg-soft)',
-                  padding: '2px 6px',
+                  padding: '2px 5px',
                   borderRadius: '4px',
                   color: 'var(--color-indigo-600)',
                 }}
@@ -92,24 +99,49 @@ export function MarkdownRenderer({ content }) {
               </a>
             );
           },
+          h1({ children }) {
+            return (
+              <h1 style={{ fontSize: '1.25rem', margin: '14px 0 8px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                {children}
+              </h1>
+            );
+          },
+          h2({ children }) {
+            return (
+              <h2 style={{ fontSize: '1.12rem', margin: '12px 0 6px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                {children}
+              </h2>
+            );
+          },
+          h3({ children }) {
+            return (
+              <h3 style={{ fontSize: '1.02rem', margin: '10px 0 4px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                {children}
+              </h3>
+            );
+          },
           p({ children }) {
-            return <p style={{ margin: '8px 0' }}>{children}</p>;
+            return <p style={{ margin: '8px 0', fontSize: 'inherit' }}>{children}</p>;
           },
           ul({ children }) {
-            return <ul style={{ margin: '8px 0 8px 24px' }}>{children}</ul>;
+            return <ul style={{ margin: '6px 0 6px 20px', fontSize: 'inherit' }}>{children}</ul>;
           },
           ol({ children }) {
-            return <ol style={{ margin: '8px 0 8px 24px' }}>{children}</ol>;
+            return <ol style={{ margin: '6px 0 6px 20px', fontSize: 'inherit' }}>{children}</ol>;
+          },
+          li({ children }) {
+            return <li style={{ margin: '3px 0', fontSize: 'inherit' }}>{children}</li>;
           },
           blockquote({ children }) {
             return (
               <blockquote
                 style={{
                   borderLeft: '3px solid var(--color-indigo-500)',
-                  margin: '12px 0',
-                  paddingLeft: '14px',
+                  margin: '10px 0',
+                  paddingLeft: '12px',
                   color: 'var(--text-secondary)',
-                  fontStyle: 'italic',
+                  fontStyle: 'normal',
+                  fontSize: '0.88rem',
                 }}
               >
                 {children}

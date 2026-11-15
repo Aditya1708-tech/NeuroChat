@@ -6,6 +6,8 @@ import {
   updateTitle,
   remove,
 } from '../controllers/conversation.controller.js';
+import { editFile } from '../controllers/artifact.controller.js';
+import { editFileSchema } from '../validators/artifact.schemas.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { validate } from '../middleware/validate.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
@@ -40,5 +42,13 @@ router.patch(
 
 // C5: Delete conversation
 router.delete('/:id', validate(conversationIdParamSchema, 'params'), asyncHandler(remove));
+
+// C6: Direct File Editing endpoint
+router.post(
+  '/:id/edit-file',
+  validate(conversationIdParamSchema, 'params'),
+  validate(editFileSchema),
+  asyncHandler(editFile)
+);
 
 export default router;

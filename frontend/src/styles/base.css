@@ -96,3 +96,32 @@ button {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }
+
+/* Resizable Split-Panel Divider Handle */
+.panel-resizer {
+  position: relative;
+  width: 8px;
+  cursor: col-resize;
+  background-color: var(--border);
+  transition: background-color 0.15s ease, width 0.15s ease;
+  z-index: 35;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.panel-resizer:hover,
+.panel-resizer.dragging {
+  background-color: var(--color-indigo-500) !important;
+  width: 10px;
+}
+
+.panel-resizer.dragging {
+  cursor: col-resize !important;
+}
+
+@media (max-width: 900px) {
+  .panel-resizer {
+    display: none !important;
+  }
+}

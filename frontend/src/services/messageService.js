@@ -14,17 +14,20 @@ export const messageService = {
     };
   },
 
-  async send(conversationId, content, language, attachment) {
+  async send(conversationId, content, language, attachment, model = 'gemini') {
     const res = await apiFetch(`/conversations/${conversationId}/messages`, {
       method: 'POST',
-      body: JSON.stringify({ content, language, attachment }),
+      timeoutMs: 180000,
+      body: JSON.stringify({ content, language, attachment, model }),
     });
     return res;
   },
 
-  async retry(conversationId) {
+  async retry(conversationId, model = 'gemini') {
     const res = await apiFetch(`/conversations/${conversationId}/messages/retry`, {
       method: 'POST',
+      timeoutMs: 180000,
+      body: JSON.stringify({ model }),
     });
     return res.data;
   },

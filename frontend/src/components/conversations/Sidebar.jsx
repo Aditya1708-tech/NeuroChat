@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useChat } from '../../context/ChatContext.jsx';
 import {
   Plus,
+  FolderOpen,
+  Sparkles,
   Search,
   MessageSquare,
   Edit2,
@@ -13,8 +15,7 @@ import {
   LogOut,
   X,
   PanelLeftClose,
-  Sun,
-  Moon,
+  MoreVertical,
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext.jsx';
 import { Modal } from '../ui/Modal.jsx';
@@ -47,6 +48,8 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse
     setSearchQuery,
     renameConversation,
     deleteConversation,
+    setLibraryModalOpen,
+    setImageStudioOpen,
   } = useChat();
   const navigate = useNavigate();
 
@@ -58,6 +61,22 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse
   // Delete modal state
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+
+  // User Profile Popover Menu
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setUserMenuOpen(false);
+      }
+    }
+    if (userMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [userMenuOpen]);
 
   const handleStartNew = () => {
     startNewChat();
@@ -171,6 +190,56 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse
           >
             <Plus size={18} />
           <span>{t('chat.newChat')}</span>
+        </button>
+
+        {/* Artifacts Library Button */}
+        <button
+          type="button"
+          onClick={() => {
+            setLibraryModalOpen(true);
+            if (onClose) onClose();
+          }}
+          className="btn"
+          style={{
+            width: '100%',
+            justifyContent: 'flex-start',
+            gap: '10px',
+            border: '1px solid var(--border)',
+            backgroundColor: 'var(--surface)',
+            color: 'var(--text-primary)',
+            padding: '0 12px',
+            minHeight: '36px',
+            fontSize: '0.88rem',
+            fontWeight: 600,
+          }}
+        >
+          <FolderOpen size={16} color="var(--color-indigo-500)" />
+          <span>Artifacts Library</span>
+        </button>
+
+        {/* Dedicated AI Image Studio Button (Gemini Key 2 Powered) */}
+        <button
+          type="button"
+          onClick={() => {
+            setImageStudioOpen(true);
+            if (onClose) onClose();
+          }}
+          className="btn"
+          style={{
+            width: '100%',
+            justifyContent: 'flex-start',
+            gap: '10px',
+            border: '1px solid rgba(168, 85, 247, 0.25)',
+            backgroundColor: 'rgba(168, 85, 247, 0.08)',
+            color: '#9333ea',
+            padding: '0 12px',
+            minHeight: '36px',
+            fontSize: '0.88rem',
+            fontWeight: 600,
+          }}
+        >
+          <Sparkles size={16} color="#9333ea" />
+          <span>AI Image Studio</span>
         </button>
 
         {/* Search input */}
@@ -324,106 +393,136 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse
           }}
         >
           {user && (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                padding: '4px 8px',
-              }}
-            >
-              <div
+            <div ref={userMenuRef} style={{ position: 'relative', width: '100%' }}>
+              {/* Popover Menu (Settings & Logout) */}
+              {userMenuOpen && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: 'calc(100% + 8px)',
+                    left: 0,
+                    right: 0,
+                    backgroundColor: 'var(--surface)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 'var(--radius-lg)',
+                    boxShadow: 'var(--shadow-xl)',
+                    padding: '6px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '2px',
+                    zIndex: 60,
+                  }}
+                >
+                  <Link
+                    to="/settings"
+                    onClick={() => setUserMenuOpen(false)}
+                    className="btn"
+                    style={{
+                      justifyContent: 'flex-start',
+                      border: 'none',
+                      fontSize: '0.875rem',
+                      padding: '8px 12px',
+                      borderRadius: 'var(--radius-md)',
+                      width: '100%',
+                      gap: '10px',
+                      color: 'var(--text-primary)',
+                    }}
+                  >
+                    <Settings size={16} />
+                    <span>{t('settings.title')}</span>
+                  </Link>
+
+                  <div style={{ height: '1px', backgroundColor: 'var(--border)', margin: '4px 0' }} />
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUserMenuOpen(false);
+                      logout();
+                    }}
+                    className="btn"
+                    style={{
+                      justifyContent: 'flex-start',
+                      border: 'none',
+                      fontSize: '0.875rem',
+                      padding: '8px 12px',
+                      borderRadius: 'var(--radius-md)',
+                      width: '100%',
+                      gap: '10px',
+                      color: 'var(--error)',
+                    }}
+                  >
+                    <LogOut size={16} />
+                    <span>{t('settings.logout')}</span>
+                  </button>
+                </div>
+              )}
+
+              {/* User Pill Button (Click to toggle menu) */}
+              <button
+                type="button"
+                onClick={() => setUserMenuOpen((prev) => !prev)}
                 style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
-                  background: 'var(--gradient-primary)',
-                  display: 'grid',
-                  placeItems: 'center',
-                  color: '#ffffff',
-                  fontWeight: 700,
-                  fontSize: '0.85rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '8px 10px',
+                  borderRadius: 'var(--radius-md)',
+                  width: '100%',
+                  border: userMenuOpen ? '1px solid var(--border-strong)' : '1px solid transparent',
+                  backgroundColor: userMenuOpen ? 'var(--surface-hover)' : 'transparent',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'background-color 0.15s ease',
                 }}
+                className="user-pill-btn"
+                title="Account menu"
               >
-                {user.name ? user.name[0].toUpperCase() : 'U'}
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
                 <div
                   style={{
-                    fontWeight: 600,
-                    fontSize: '0.9rem',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    background: 'var(--gradient-primary)',
+                    display: 'grid',
+                    placeItems: 'center',
+                    color: '#ffffff',
+                    fontWeight: 700,
+                    fontSize: '0.85rem',
+                    flexShrink: 0,
                   }}
                 >
-                  {user.name}
+                  {user.name ? user.name[0].toUpperCase() : 'U'}
                 </div>
-                <div
-                  style={{
-                    fontSize: '0.75rem',
-                    color: 'var(--text-secondary)',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {user.email}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontWeight: 600,
+                      fontSize: '0.875rem',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      color: 'var(--text-primary)',
+                    }}
+                  >
+                    {user.name}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: '0.72rem',
+                      color: 'var(--text-secondary)',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {user.email}
+                  </div>
                 </div>
-              </div>
+                <MoreVertical size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+              </button>
             </div>
           )}
-
-          <button
-            type="button"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="btn"
-            style={{
-              justifyContent: 'flex-start',
-              border: 'none',
-              fontSize: '0.9rem',
-              padding: '0 8px',
-              width: '100%',
-              gap: '10px',
-            }}
-          >
-            {theme === 'dark' ? (
-              <Sun size={16} color="#fbbf24" />
-            ) : (
-              <Moon size={16} color="var(--color-indigo-500)" />
-            )}
-            <span>{theme === 'dark' ? 'Light mode' : 'Dark mode'}</span>
-          </button>
-
-          <Link
-            to="/settings"
-            className="btn"
-            style={{
-              justifyContent: 'flex-start',
-              border: 'none',
-              fontSize: '0.9rem',
-              padding: '0 8px',
-            }}
-          >
-            <Settings size={16} />
-            <span>{t('settings.title')}</span>
-          </Link>
-
-          <button
-            type="button"
-            onClick={logout}
-            className="btn"
-            style={{
-              justifyContent: 'flex-start',
-              border: 'none',
-              fontSize: '0.9rem',
-              padding: '0 8px',
-              color: 'var(--error)',
-            }}
-          >
-            <LogOut size={16} />
-            <span>{t('settings.logout')}</span>
-          </button>
           </div>
         </div>
       </aside>
